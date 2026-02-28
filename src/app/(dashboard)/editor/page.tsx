@@ -11,7 +11,7 @@ import { ResumeLivePreview } from "@/components/resume-preview";
 import { createLoginRedirectPath, REQUIRE_SIGN_IN_FOR_APP } from "@/lib/auth-redirect";
 import { 
   User, Briefcase, GraduationCap, Code, Folder, Award, Languages,
-  ChevronLeft, Plus, Trash2, Eye, Download, Save, LogOut
+  ChevronLeft, Plus, Trash2, Eye, Download, Save, LogOut, Menu, X
 } from "lucide-react";
 import { CVData, DEFAULT_CV_DATA, TEMPLATES, TemplateId } from "@/types";
 import { downloadCVPdf } from "@/lib/cv-pdf";
@@ -146,6 +146,7 @@ export default function EditorPage() {
   const [templateId, setTemplateId] = useState<TemplateId>(requestedTemplateId);
   const [activeSection, setActiveSection] = useState<Section>("personal");
   const [showPreview, setShowPreview] = useState(true);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeCvId, setActiveCvId] = useState<string | null>(requestedCvId);
   const [missingCvId, setMissingCvId] = useState<string | null>(null);
@@ -275,6 +276,17 @@ export default function EditorPage() {
   };
 
   const handleSave = () => {
+    if (session.kind === "guest") {
+      const nextPath = activeCvId
+        ? `/editor?id=${activeCvId}`
+        : templateId === "modern"
+        ? "/editor"
+        : `/editor?template=${templateId}`;
+
+      router.push(createLoginRedirectPath(nextPath));
+      return;
+    }
+
     setIsSaving(true);
     persistCV();
     setIsSaving(false);
@@ -936,19 +948,38 @@ export default function EditorPage() {
   return (
     <FormChromeProvider tone={templateId}>
       <div className={cn("h-screen flex", chromeTheme.page)}>
+        {/* Mobile Sidebar Overlay */}
+        {showMobileSidebar && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setShowMobileSidebar(false)}
+          />
+        )}
+
         {/* Left Sidebar - Section Navigator */}
-        <aside className={cn("w-64 border-r flex flex-col", chromeTheme.sidebar)}>
-          <div className={cn("p-4 border-b", chromeTheme.sidebarHeader)}>
+        <aside className={cn(
+          "border-r flex flex-col fixed lg:relative z-50 h-full transition-transform duration-300",
+          chromeTheme.sidebar,
+          showMobileSidebar ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          "w-64"
+        )}>
+          <div className={cn("p-4 border-b flex items-center justify-between", chromeTheme.sidebarHeader)}>
             <Link
               href="/dashboard"
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg w-full justify-start transition-colors",
+                "flex items-center gap-2 px-4 py-2 rounded-lg w-fit justify-start transition-colors",
                 chromeTheme.backLink
               )}
             >
               <ChevronLeft className="w-4 h-4" />
-              Back to Dashboard
+              <span className="hidden sm:inline">Back to Dashboard</span>
             </Link>
+            <button
+              onClick={() => setShowMobileSidebar(false)}
+              className="lg:hidden p-2"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
           <nav className="flex-1 overflow-y-auto p-2">
             {sections.map((section) => (
@@ -973,12 +1004,19 @@ export default function EditorPage() {
           {/* Header */}
           <header
             className={cn(
-              "border-b px-6 py-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between",
+              "border-b px-4 py-3 sm:px-6 sm:py-4 flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between",
               chromeTheme.header
             )}
           >
-            <div className="flex flex-col gap-2">
-              <h1 className={cn("text-xl font-semibold", chromeTheme.title)}>{cvTitle}</h1>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowMobileSidebar(true)}
+                className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-gray-100"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div className="flex flex-col gap-1 sm:gap-2">
+                <h1 className={cn("text-lg sm:text-xl font-semibold", chromeTheme.title)}>{cvTitle}</h1>
               <p className={cn("text-sm", chromeTheme.mutedText)}>
                 Last saved:{" "}
                 {lastSavedAt
@@ -1007,7 +1045,8 @@ export default function EditorPage() {
                 <span>{session.displayName}</span>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
+            </div>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <label className="flex items-center gap-2 text-sm text-gray-600">
                 <span>Template</span>
                 <select
@@ -1066,10 +1105,10 @@ export default function EditorPage() {
           {/* Content */}
           <div className="flex-1 flex overflow-hidden">
             {/* Editor Form */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
               <div className="max-w-2xl mx-auto">
-                <div className={cn("rounded-2xl border p-6", chromeTheme.formCanvas)}>
-                  <h2 className={cn("text-lg font-semibold mb-6", chromeTheme.sectionTitle)}>
+                <div className={cn("rounded-2xl border p-4 sm:p-6", chromeTheme.formCanvas)}>
+                  <h2 className={cn("text-lg font-semibold mb-4 sm:mb-6", chromeTheme.sectionTitle)}>
                     {sections.find((s) => s.id === activeSection)?.label}
                   </h2>
                   {renderSectionContent()}
@@ -1080,7 +1119,11 @@ export default function EditorPage() {
             {/* Right Panel - Preview */}
             {showPreview && (
               <div
-                className={cn("w-[400px] border-l overflow-y-auto p-4", chromeTheme.previewPanel)}
+                className={cn(
+                  "w-full sm:w-[350px] md:w-[400px] border-l overflow-y-auto p-3 sm:p-4",
+                  chromeTheme.previewPanel,
+                  "hidden lg:block"
+                )}
               >
                 <ResumeLivePreview templateId={templateId} title={cvTitle} data={cvData} />
               </div>

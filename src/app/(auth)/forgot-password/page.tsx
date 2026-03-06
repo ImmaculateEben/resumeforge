@@ -2,45 +2,59 @@ import Link from "next/link";
 
 export default function ForgotPasswordPage() {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-      <h1 className="text-2xl font-bold text-gray-900 text-center mb-2">
-        Reset your password
-      </h1>
-      <p className="text-sm text-gray-600 text-center mb-8">
-        Enter your email and we&apos;ll send you a link to reset your password.
-      </p>
-      <form className="space-y-4">
+    <div className="animate-fade-in">
+      <div className="mb-8">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 text-primary mb-5">
+          <svg className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-extrabold text-gray-900 mb-2">
+          Reset your password
+        </h1>
+        <p className="text-gray-500">
+          Enter your email and we&apos;ll send you a link to reset your password.
+        </p>
+      </div>
+
+      <form className="space-y-5">
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-gray-700 mb-1.5"
           >
-            Email
+            Email address
           </label>
           <input
             id="email"
             name="email"
             type="email"
             required
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+            className="input-modern"
             placeholder="you@example.com"
           />
         </div>
         <button
           type="submit"
-          className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+          className="btn-primary w-full py-2.5 text-sm justify-center"
         >
           Send reset link
         </button>
       </form>
-      <p className="mt-6 text-center text-sm text-gray-600">
-        <Link
-          href="/login"
-          className="font-medium text-gray-900 hover:text-gray-700"
-        >
-          Back to login
-        </Link>
-      </p>
+
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <p className="text-center text-sm text-gray-500">
+          <Link
+            href="/login"
+            className="font-semibold text-primary hover:text-primary-dark transition-colors inline-flex items-center gap-1"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Back to login
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

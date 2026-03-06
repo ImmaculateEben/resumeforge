@@ -10,7 +10,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "ResumeForge - Build ATS-Friendly Resumes Instantly",
   description:
-    "Create professional, ATS-friendly resumes and CVs quickly. Build and download a PDF without signing up.",
+    "Create professional, ATS-friendly resumes and CVs in minutes. Build and download a polished PDF without signing up — completely free.",
 };
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
       </body>

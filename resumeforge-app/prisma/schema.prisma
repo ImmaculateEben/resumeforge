@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  user
+  admin
+}
+
+enum UserStatus {
+  active
+  suspended
+}
+
+enum DocumentType {
+  resume
+  cv
+}
+
+enum ResumeStatus {
+  active
+  archived
+}
+
+model User {
+  id               String    @id @default(uuid()) @db.Uuid
+  email            String    @unique
+  passwordHash     String    @map("password_hash")
+  fullName         String    @map("full_name")
+  role             UserRole  @default(user)
+  status           UserStatus @default(active)
+  emailVerifiedAt  DateTime? @map("email_verified_at")
+  suspendedAt      DateTime? @map("suspended_at")
+  suspensionReason String?   @map("suspension_reason")
+  lastLoginAt      DateTime? @map("last_login_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  sessions            Session[]
+  verificationTokens   VerificationToken[]
+  passwordResetTokens  PasswordResetToken[]
+  resumes              Resume[]
+  auditLogs            AdminAuditLog[]
+
+  @@index([status])
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  sessionToken String   @unique @map("session_token")
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tokenHash])
+  @@map("verification_tokens")
+}
+
+model PasswordResetToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  tokenHash  String    @map("token_hash")
+  expiresAt  DateTime  @map("expires_at")
+  consumedAt DateTime? @map("consumed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tokenHash])
+  @@map("password_reset_tokens")
+}
+
+model Resume {
+  id                  String       @id @default(uuid()) @db.Uuid
+  userId              String       @map("user_id") @db.Uuid
+  title               String
+  documentType        DocumentType @default(resume) @map("document_type")
+  templateKey         String       @map("template_key")
+  contentJson         Json         @map("content_json")
+  status              ResumeStatus @default(active)
+  latestVersionNumber Int          @default(1) @map("latest_version_number")
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+  lastOpenedAt        DateTime?    @map("last_opened_at")
+  deletedAt           DateTime?    @map("deleted_at")
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template Template        @relation(fields: [templateKey], references: [key])
+  versions ResumeVersion[]
+
+  @@index([userId, updatedAt(sort: Desc)])
+  @@index([userId, status])
+  @@map("resumes")
+}
+
+model ResumeVersion {
+  id              String   @id @default(uuid()) @db.Uuid
+  resumeId        String   @map("resume_id") @db.Uuid
+  versionNumber   Int      @map("version_number")
+  contentJson     Json     @map("content_json")
+  changeSummary   String?  @map("change_summary")
+  createdByUserId String   @map("created_by_user_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@unique([resumeId, versionNumber])
+  @@index([createdAt])
+  @@map("resume_versions")
+}
+
+model Template {
+  key             String   @id
+  name            String
+  description     String
+  isActive        Boolean  @default(true) @map("is_active")
+  displayOrder    Int      @default(0) @map("display_order")
+  version         Int      @default(1)
+  metadataJson    Json?    @map("metadata_json")
+  layoutConfigJson Json?   @map("layout_config_json")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  resumes Resume[]
+
+  @@map("templates")
+}
+
+model AdminAuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actorUserId String   @map("actor_user_id") @db.Uuid
+  action      String
+  targetType  String   @map("target_type")
+  targetId    String?  @map("target_id")
+  beforeJson  Json?    @map("before_json")
+  afterJson   Json?    @map("after_json")
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  actor User @relation(fields: [actorUserId], references: [id])
+
+  @@index([actorUserId])
+  @@index([targetType])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
+}

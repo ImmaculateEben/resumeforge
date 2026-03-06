@@ -66,7 +66,7 @@ export function validationError(error: ZodError) {
   return errorResponse({
     code: "VALIDATION_ERROR",
     message: "Payload validation failed.",
-    details: error.errors.map((e) => ({
+    details: error.issues.map((e) => ({
       path: e.path.join("."),
       message: e.message,
     })),

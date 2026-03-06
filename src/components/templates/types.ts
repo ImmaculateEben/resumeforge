@@ -111,6 +111,7 @@ export interface TemplateProps {
   data: ResumeData;
   styleConfig: StyleConfig;
   accentColors: AccentColors;
+  documentType?: "resume" | "cv";
 }
 
 export const sampleResumeData: ResumeData = {

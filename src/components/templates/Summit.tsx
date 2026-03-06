@@ -1,9 +1,10 @@
 import type { TemplateProps } from "./types";
 
-export function SummitTemplate({ data, styleConfig, accentColors }: TemplateProps) {
+export function SummitTemplate({ data, styleConfig, accentColors, documentType }: TemplateProps) {
   const fs = styleConfig.fontScale === "compact" ? 10.5 : 12.5;
   const gap = styleConfig.spacing === "tight" ? 10 : 16;
   const b = data.basics;
+  const isCV = documentType === "cv";
 
   const sidebarBg = accentColors.light;
   const sidebarText = accentColors.text;
@@ -14,6 +15,9 @@ export function SummitTemplate({ data, styleConfig, accentColors }: TemplateProp
       <div style={{ width: "32%", background: sidebarBg, padding: gap * 1.2, flexShrink: 0 }}>
         {/* Name & Title */}
         <div style={{ marginBottom: gap * 1.2 }}>
+          {isCV && (
+            <p style={{ fontSize: fs * 0.75, fontWeight: 600, color: accentColors.primary, textTransform: "uppercase", letterSpacing: "0.12em", margin: "0 0 4px" }}>Curriculum Vitae</p>
+          )}
           <h1 style={{ fontSize: fs * 1.7, fontWeight: 700, color: sidebarText, margin: 0, lineHeight: 1.2 }}>
             {b.fullName || "Your Name"}
           </h1>

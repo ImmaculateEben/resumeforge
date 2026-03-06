@@ -1,14 +1,18 @@
 import type { TemplateProps } from "./types";
 
-export function QuillTemplate({ data, styleConfig, accentColors }: TemplateProps) {
+export function QuillTemplate({ data, styleConfig, accentColors, documentType }: TemplateProps) {
   const fs = styleConfig.fontScale === "compact" ? 10.5 : 12.5;
   const gap = styleConfig.spacing === "tight" ? 14 : 22;
   const b = data.basics;
+  const isCV = documentType === "cv";
 
   return (
     <div style={{ fontSize: fs, lineHeight: 1.65, color: "#374151", fontFamily: "'Inter', system-ui, sans-serif" }}>
       {/* Elegant Header */}
       <div style={{ marginBottom: gap * 1.2 }}>
+        {isCV && (
+          <p style={{ fontSize: fs * 0.8, fontWeight: 400, color: accentColors.primary, textTransform: "uppercase", letterSpacing: "0.2em", margin: "0 0 6px" }}>Curriculum Vitae</p>
+        )}
         <h1 style={{ fontSize: fs * 2.4, fontWeight: 300, color: accentColors.text, margin: 0, letterSpacing: "0.03em" }}>
           {b.fullName || "Your Name"}
         </h1>

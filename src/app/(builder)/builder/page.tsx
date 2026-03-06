@@ -2,7 +2,8 @@
 
 import { useState, useRef, useMemo } from "react";
 import { useResume } from "@/hooks/use-resume";
-import { getTemplateComponent, accentColorMap } from "@/components/templates";
+import { getTemplateComponent, accentColorMap, sampleResumeData } from "@/components/templates";
+import type { ResumeData } from "@/components/templates/types";
 
 type MobileTab = "edit" | "preview";
 
@@ -57,6 +58,24 @@ export default function BuilderPage() {
     () => getTemplateComponent(resume.templateKey),
     [resume.templateKey]
   );
+
+  // Merge user data with sample data so the preview always shows structure.
+  // Per-section: if the user has content, show theirs; otherwise show sample.
+  const previewData = useMemo<ResumeData>(() => {
+    const d = resume.data;
+    const s = sampleResumeData;
+    return {
+      basics: d.basics.fullName ? d.basics : s.basics,
+      summary: d.summary.length > 0 ? d.summary : s.summary,
+      experience: d.experience.length > 0 ? d.experience : s.experience,
+      education: d.education.length > 0 ? d.education : s.education,
+      projects: d.projects.length > 0 ? d.projects : s.projects,
+      skills: d.skills.length > 0 ? d.skills : s.skills,
+      certifications: d.certifications.length > 0 ? d.certifications : s.certifications,
+      links: d.links.length > 0 ? d.links : s.links,
+      customSections: d.customSections.length > 0 ? d.customSections : s.customSections,
+    };
+  }, [resume.data]);
 
   const handlePrint = () => {
     window.print();
@@ -198,7 +217,7 @@ export default function BuilderPage() {
             )}
 
             {/* Action Buttons Row */}
-            <div className="flex flex-wrap gap-1.5 mb-5">
+            <div className="flex flex-wrap gap-1.5 mb-2">
               <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-50 border border-gray-200">
                 <button
                   onClick={() => resume.setDocumentType("resume")}
@@ -244,6 +263,11 @@ export default function BuilderPage() {
                 Clear
               </button>
             </div>
+            <p className="text-[10px] text-gray-400 mb-5">
+              {resume.documentType === "cv"
+                ? "CV — A comprehensive academic document covering all experience, education, publications, and research. Shows \"Curriculum Vitae\" header."
+                : "Resume — A concise 1–2 page summary tailored for a specific role. Highlights relevant experience and skills."}
+            </p>
 
             <div className="space-y-5">
               {/* ─── Template Selector ─── */}
@@ -617,7 +641,7 @@ export default function BuilderPage() {
               </button>
             </div>
             <div ref={previewRef} className="print-area bg-white shadow-xl rounded-sm w-full max-w-[210mm] min-h-[297mm] p-10 sm:p-12 relative">
-              <TemplateComponent data={resume.data} styleConfig={resume.styleConfig} accentColors={accentColors} />
+              <TemplateComponent data={previewData} styleConfig={resume.styleConfig} accentColors={accentColors} documentType={resume.documentType} />
             </div>
           </div>
         </div>

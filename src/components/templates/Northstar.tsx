@@ -1,9 +1,10 @@
 import type { TemplateProps } from "./types";
 
-export function NorthstarTemplate({ data, styleConfig, accentColors }: TemplateProps) {
+export function NorthstarTemplate({ data, styleConfig, accentColors, documentType }: TemplateProps) {
   const fs = styleConfig.fontScale === "compact" ? 10.5 : 12.5;
   const gap = styleConfig.spacing === "tight" ? 12 : 18;
   const b = data.basics;
+  const isCV = documentType === "cv";
 
   return (
     <div style={{ fontSize: fs, lineHeight: 1.55, color: "#1f2937", fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -17,6 +18,9 @@ export function NorthstarTemplate({ data, styleConfig, accentColors }: TemplateP
           marginBottom: gap,
         }}
       >
+        {isCV && (
+          <p style={{ fontSize: fs * 0.78, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.18em", margin: "0 0 4px", opacity: 0.75 }}>Curriculum Vitae</p>
+        )}
         <h1 style={{ fontSize: fs * 2.2, fontWeight: 800, margin: 0, letterSpacing: "-0.02em" }}>
           {b.fullName || "Your Name"}
         </h1>

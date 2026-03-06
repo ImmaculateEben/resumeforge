@@ -1,14 +1,18 @@
 import type { TemplateProps } from "./types";
 
-export function AtlasTemplate({ data, styleConfig, accentColors }: TemplateProps) {
+export function AtlasTemplate({ data, styleConfig, accentColors, documentType }: TemplateProps) {
   const fs = styleConfig.fontScale === "compact" ? 11 : 13;
   const gap = styleConfig.spacing === "tight" ? 12 : 18;
   const b = data.basics;
+  const isCV = documentType === "cv";
 
   return (
     <div style={{ fontSize: fs, lineHeight: 1.55, color: "#1f2937", fontFamily: "'Inter', system-ui, sans-serif" }}>
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: gap }}>
+        {isCV && (
+          <p style={{ fontSize: fs * 0.8, fontWeight: 600, color: accentColors.primary, textTransform: "uppercase", letterSpacing: "0.15em", margin: "0 0 6px" }}>Curriculum Vitae</p>
+        )}
         <h1 style={{ fontSize: fs * 2, fontWeight: 700, color: accentColors.text, margin: 0, letterSpacing: "-0.02em" }}>
           {b.fullName || "Your Name"}
         </h1>

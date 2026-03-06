@@ -3,7 +3,8 @@
 import { useState, useMemo, useRef, use } from "react";
 import Link from "next/link";
 import { useResume } from "@/hooks/use-resume";
-import { getTemplateComponent, accentColorMap } from "@/components/templates";
+import { getTemplateComponent, accentColorMap, sampleResumeData } from "@/components/templates";
+import type { ResumeData } from "@/components/templates/types";
 
 type MobileTab = "edit" | "preview";
 
@@ -53,6 +54,22 @@ export default function ResumeEditorPage({ params }: { params: Promise<{ resumeI
     () => getTemplateComponent(resume.templateKey),
     [resume.templateKey]
   );
+
+  const previewData: ResumeData = useMemo(() => {
+    const d = resume.data;
+    const s = sampleResumeData;
+    return {
+      basics: d.basics.fullName ? d.basics : s.basics,
+      summary: d.summary && d.summary.length > 0 ? d.summary : s.summary,
+      experience: d.experience.length > 0 ? d.experience : s.experience,
+      education: d.education.length > 0 ? d.education : s.education,
+      projects: d.projects.length > 0 ? d.projects : s.projects,
+      skills: d.skills.length > 0 ? d.skills : s.skills,
+      certifications: d.certifications.length > 0 ? d.certifications : s.certifications,
+      links: d.links.length > 0 ? d.links : s.links,
+      customSections: d.customSections.length > 0 ? d.customSections : s.customSections,
+    };
+  }, [resume.data]);
 
   if (!resume.loaded) {
     return (
@@ -432,7 +449,7 @@ export default function ResumeEditorPage({ params }: { params: Promise<{ resumeI
               </button>
             </div>
             <div ref={previewRef} className="print-area bg-white shadow-xl rounded-sm w-full max-w-[210mm] min-h-[297mm] p-10 sm:p-12 relative">
-              <TemplateComponent data={resume.data} styleConfig={resume.styleConfig} accentColors={accentColors} />
+              <TemplateComponent data={previewData} styleConfig={resume.styleConfig} accentColors={accentColors} documentType={resume.documentType} />
             </div>
           </div>
         </div>

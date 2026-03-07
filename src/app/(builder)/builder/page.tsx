@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 
-export default function BuilderPage() {
+function BuilderRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
@@ -18,5 +18,19 @@ export default function BuilderPage() {
     <div className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
       <div className="w-8 h-8 rounded-full border-3 border-primary/20 border-t-primary animate-spin" />
     </div>
+  );
+}
+
+export default function BuilderPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-[calc(100vh-3.5rem)]">
+          <div className="w-8 h-8 rounded-full border-3 border-primary/20 border-t-primary animate-spin" />
+        </div>
+      }
+    >
+      <BuilderRedirect />
+    </Suspense>
   );
 }

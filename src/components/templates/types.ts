@@ -14,7 +14,37 @@ export interface ResumeData {
   skills: SkillGroup[];
   certifications: CertificationItem[];
   links: LinkItem[];
+  referees: RefereeItem[];
   customSections: CustomSection[];
+}
+
+export interface RefereeItem {
+  id: string;
+  name: string;
+  position?: string;
+  organization?: string;
+  email?: string;
+  phone?: string;
+  relationship?: string;
+}
+
+export type CustomEntryStyle = "standard" | "compact" | "bullet-only" | "two-column" | "tag-list";
+
+/** Defines which sections are visible and in what order */
+export type SectionKey =
+  | "summary"
+  | "experience"
+  | "education"
+  | "skills"
+  | "projects"
+  | "certifications"
+  | "links"
+  | "referees"
+  | "custom";
+
+export interface SectionOrder {
+  key: SectionKey;
+  visible: boolean;
 }
 
 export interface ExperienceItem {
@@ -74,6 +104,7 @@ export interface LinkItem {
 export interface CustomSection {
   id: string;
   title: string;
+  entryStyle: CustomEntryStyle;
   entries: CustomSectionEntry[];
 }
 
@@ -82,14 +113,30 @@ export interface CustomSectionEntry {
   heading: string;
   subheading?: string;
   dateRange?: string;
+  description?: string;
+  tags?: string[];
   bullets: string[];
 }
 
 export interface StyleConfig {
-  fontScale: "compact" | "comfortable";
+  fontSize: number;
+  nameFontSize: number;
+  sectionTitleFontSize: number;
   accentTone: string;
   spacing: "tight" | "normal";
   showSectionDividers: boolean;
+}
+
+/** User-overridden section titles */
+export interface SectionTitles {
+  summary?: string;
+  experience?: string;
+  education?: string;
+  skills?: string;
+  projects?: string;
+  certifications?: string;
+  links?: string;
+  referees?: string;
 }
 
 export interface AccentColors {
@@ -112,6 +159,8 @@ export interface TemplateProps {
   styleConfig: StyleConfig;
   accentColors: AccentColors;
   documentType?: "resume" | "cv";
+  sectionOrder?: SectionOrder[];
+  sectionTitles?: SectionTitles;
 }
 
 export const sampleResumeData: ResumeData = {
@@ -200,6 +249,17 @@ export const sampleResumeData: ResumeData = {
   links: [
     { id: "link1", label: "GitHub", url: "github.com/janedoe" },
     { id: "link2", label: "LinkedIn", url: "linkedin.com/in/janedoe" },
+  ],
+  referees: [
+    {
+      id: "ref1",
+      name: "Dr. Sarah Chen",
+      position: "Engineering Director",
+      organization: "TechCorp Inc.",
+      email: "sarah.chen@techcorp.com",
+      phone: "+1 (555) 987-6543",
+      relationship: "Direct Manager",
+    },
   ],
   customSections: [],
 };

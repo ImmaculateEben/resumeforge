@@ -1,4 +1,28 @@
+"use client";
+
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+
 export default function SettingsPage() {
+  const { data: session } = useSession();
+
+  if (!session?.user) {
+    return (
+      <div className="max-w-md mx-auto py-16 px-4 text-center animate-fade-in">
+        <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6 mx-auto">
+          <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+        </div>
+        <h1 className="text-xl font-bold text-gray-900 mb-2">Sign in to access Settings</h1>
+        <p className="text-sm text-gray-500 mb-6">Create an account or sign in to manage your profile, change your password, and more.</p>
+        <div className="flex flex-col gap-2">
+          <Link href="/login" className="btn-primary text-sm py-2.5 text-center">Sign In</Link>
+          <Link href="/signup" className="btn-secondary text-sm py-2.5 text-center">Create Account</Link>
+          <Link href="/builder" className="text-sm text-gray-400 hover:text-gray-600 mt-2">Back to Builder</Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto py-8 px-4 sm:px-6 animate-fade-in">
       <div className="mb-8">

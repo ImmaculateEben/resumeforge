@@ -7,6 +7,7 @@ export const templateOptions = [
   { key: "summit", name: "Summit", desc: "Modern Two-Column", color: "from-blue-500 to-indigo-600" },
   { key: "quill", name: "Quill", desc: "Elegant & Minimalist", color: "from-emerald-500 to-teal-600" },
   { key: "northstar", name: "Northstar", desc: "Bold & Contemporary", color: "from-violet-500 to-purple-600" },
+  { key: "registry", name: "Registry", desc: "Formal CV Layout", color: "from-stone-500 to-zinc-700" },
 ];
 
 export const accentOptions = [
@@ -20,17 +21,19 @@ export const accentOptions = [
 
 export const sectionLabels: Record<SectionKey, string> = {
   summary: "Summary",
+  personalDetails: "Personal Details",
   experience: "Experience",
   education: "Education",
   skills: "Skills",
   projects: "Projects",
   certifications: "Certifications",
   links: "Links",
+  hobbies: "Hobbies",
   referees: "References",
   custom: "Custom Sections",
 };
 
-export const cvOnlySections: SectionKey[] = ["referees"];
+export const cvOnlySections: SectionKey[] = ["personalDetails", "hobbies", "referees"];
 
 export const entryStyleOptions: { value: CustomEntryStyle; label: string; desc: string }[] = [
   { value: "standard", label: "Standard", desc: "Heading, subheading, date, bullets" },

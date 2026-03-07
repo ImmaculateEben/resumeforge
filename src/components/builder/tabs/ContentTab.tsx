@@ -2,6 +2,7 @@
 
 import type { useResume } from "@/hooks/use-resume";
 import { PersonalInfoSection } from "../sections/PersonalInfoSection";
+import { PersonalDetailsSection } from "../sections/PersonalDetailsSection";
 import { SummarySection } from "../sections/SummarySection";
 import { ExperienceSection } from "../sections/ExperienceSection";
 import { EducationSection } from "../sections/EducationSection";
@@ -9,6 +10,7 @@ import { SkillsSection } from "../sections/SkillsSection";
 import { ProjectsSection } from "../sections/ProjectsSection";
 import { CertificationsSection } from "../sections/CertificationsSection";
 import { LinksSection } from "../sections/LinksSection";
+import { HobbiesSection } from "../sections/HobbiesSection";
 import { RefereesSection } from "../sections/RefereesSection";
 import { CustomSectionsSection } from "../sections/CustomSectionsSection";
 
@@ -36,6 +38,18 @@ export function ContentTab({ resume, expandedSections, toggleSection }: ContentT
         open={isOpen("summary")}
         onToggle={() => toggleSection("summary")}
       />
+
+      {resume.documentType === "cv" && (
+        <PersonalDetailsSection
+          personalDetails={resume.data.personalDetails}
+          updatePersonalDetails={resume.updatePersonalDetails}
+          addPersonalDetailRow={resume.addPersonalDetailRow}
+          updatePersonalDetailRow={resume.updatePersonalDetailRow}
+          removePersonalDetailRow={resume.removePersonalDetailRow}
+          open={isOpen("personalDetails")}
+          onToggle={() => toggleSection("personalDetails")}
+        />
+      )}
 
       <ExperienceSection
         experience={resume.data.experience}
@@ -103,6 +117,17 @@ export function ContentTab({ resume, expandedSections, toggleSection }: ContentT
         open={isOpen("links")}
         onToggle={() => toggleSection("links")}
       />
+
+      {resume.documentType === "cv" && (
+        <HobbiesSection
+          hobbies={resume.data.hobbies}
+          addHobby={resume.addHobby}
+          updateHobby={resume.updateHobby}
+          removeHobby={resume.removeHobby}
+          open={isOpen("hobbies")}
+          onToggle={() => toggleSection("hobbies")}
+        />
+      )}
 
       {resume.documentType === "cv" && (
         <RefereesSection

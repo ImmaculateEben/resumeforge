@@ -152,6 +152,8 @@ export function EditorSidebar({ resume }: EditorSidebarProps) {
             exportJSON={resume.exportJSON}
             importJSON={resume.importJSON}
             clearAll={resume.clearAll}
+            customSections={resume.data.customSections}
+            updateCustomSection={resume.updateCustomSection}
           />
         )}
       </div>

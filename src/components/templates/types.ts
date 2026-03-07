@@ -8,14 +8,33 @@ export interface ResumeData {
     website?: string;
   };
   summary: string;
+  personalDetails: PersonalDetails;
   experience: ExperienceItem[];
   education: EducationItem[];
   projects: ProjectItem[];
   skills: SkillGroup[];
   certifications: CertificationItem[];
   links: LinkItem[];
+  hobbies: string[];
   referees: RefereeItem[];
   customSections: CustomSection[];
+}
+
+export interface PersonalDetailRow {
+  id: string;
+  label: string;
+  value: string;
+}
+
+export interface PersonalDetails {
+  dateOfBirth?: string;
+  stateOfOrigin?: string;
+  localGovernmentArea?: string;
+  sex?: string;
+  maritalStatus?: string;
+  nationality?: string;
+  religion?: string;
+  extraDetails: PersonalDetailRow[];
 }
 
 export interface RefereeItem {
@@ -33,12 +52,14 @@ export type CustomEntryStyle = "standard" | "compact" | "bullet-only" | "two-col
 /** Defines which sections are visible and in what order */
 export type SectionKey =
   | "summary"
+  | "personalDetails"
   | "experience"
   | "education"
   | "skills"
   | "projects"
   | "certifications"
   | "links"
+  | "hobbies"
   | "referees"
   | "custom";
 
@@ -130,12 +151,14 @@ export interface StyleConfig {
 /** User-overridden section titles */
 export interface SectionTitles {
   summary?: string;
+  personalDetails?: string;
   experience?: string;
   education?: string;
   skills?: string;
   projects?: string;
   certifications?: string;
   links?: string;
+  hobbies?: string;
   referees?: string;
 }
 
@@ -174,6 +197,18 @@ export const sampleResumeData: ResumeData = {
   },
   summary:
     "Results-driven frontend developer with 6+ years of experience building performant, accessible web applications. Passionate about clean code, design systems, and delivering exceptional user experiences at scale.",
+  personalDetails: {
+    dateOfBirth: "May 12, 1995",
+    stateOfOrigin: "Oyo State",
+    localGovernmentArea: "Ibadan North",
+    sex: "Female",
+    maritalStatus: "Single",
+    nationality: "Nigerian",
+    religion: "Christian",
+    extraDetails: [
+      { id: "detail1", label: "Languages", value: "English, Yoruba" },
+    ],
+  },
   experience: [
     {
       id: "exp1",
@@ -249,6 +284,11 @@ export const sampleResumeData: ResumeData = {
   links: [
     { id: "link1", label: "GitHub", url: "github.com/janedoe" },
     { id: "link2", label: "LinkedIn", url: "linkedin.com/in/janedoe" },
+  ],
+  hobbies: [
+    "Reading and research",
+    "Mentoring junior developers",
+    "Attending product design meetups",
   ],
   referees: [
     {

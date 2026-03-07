@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import type { SectionOrder, SectionTitles, SectionKey } from "@/components/templates/types";
+import type { SectionOrder, SectionTitles, SectionKey, CustomSection } from "@/components/templates/types";
 import { sectionLabels, cvOnlySections } from "../constants";
 import { MoveButton } from "../shared/MoveButton";
 
@@ -16,12 +16,14 @@ interface SettingsTabProps {
   exportJSON: () => void;
   importJSON: (jsonString: string) => boolean;
   clearAll: () => void;
+  customSections?: CustomSection[];
+  updateCustomSection?: (id: string, updates: Partial<CustomSection>) => void;
 }
 
 export function SettingsTab({
   documentType, setDocumentType, sectionOrder, moveSection,
   toggleSectionVisibility, sectionTitles, updateSectionTitle,
-  exportJSON, importJSON, clearAll,
+  exportJSON, importJSON, clearAll, customSections, updateCustomSection,
 }: SettingsTabProps) {
   const [importStatus, setImportStatus] = useState<"idle" | "success" | "error">("idle");
   const [confirmClear, setConfirmClear] = useState(false);
@@ -78,7 +80,7 @@ export function SettingsTab({
         <p className="text-xs text-gray-400 mt-1.5">
           {documentType === "resume"
             ? "Concise format, typically 1-2 pages"
-            : "Comprehensive format with references section"}
+            : "Comprehensive format with personal details, hobbies, and references"}
         </p>
       </section>
 
@@ -154,6 +156,25 @@ export function SettingsTab({
                 />
               </div>
             ))}
+          {/* Custom sections title overrides */}
+          {customSections && customSections.length > 0 && updateCustomSection && (
+            <>
+              <div className="h-px bg-gray-100 my-2" />
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">Custom Sections</p>
+              {customSections.map((cs, idx) => (
+                <div key={cs.id} className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 w-24 shrink-0">Custom {idx + 1}</span>
+                  <input
+                    type="text"
+                    placeholder={`Custom Section ${idx + 1}`}
+                    className="input-modern text-sm flex-1"
+                    value={cs.title}
+                    onChange={(e) => updateCustomSection(cs.id, { title: e.target.value })}
+                  />
+                </div>
+              ))}
+            </>
+          )}
         </div>
       </section>
 

@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 
 export default function BuilderPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryString = searchParams.toString();
 
   useEffect(() => {
     const id = uuidv4();
-    router.replace(`/resume/${id}`);
-  }, [router]);
+    router.replace(`/resume/${id}${queryString ? `?${queryString}` : ""}`);
+  }, [router, queryString]);
 
   return (
     <div className="flex items-center justify-center h-[calc(100vh-3.5rem)]">

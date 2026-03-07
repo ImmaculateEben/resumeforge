@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, use } from "react";
-import Link from "next/link";
-import { useResume } from "@/hooks/use-resume";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useResume, registrySectionOrder } from "@/hooks/use-resume";
 import { EditorSidebar } from "@/components/builder/EditorSidebar";
 import { PreviewPanel } from "@/components/builder/PreviewPanel";
 import { MobileTabBar } from "@/components/builder/MobileTabBar";
@@ -11,9 +12,20 @@ type MobileTab = "edit" | "preview";
 
 export default function ResumeEditorPage({ params }: { params: Promise<{ resumeId: string }> }) {
   const { resumeId } = use(params);
-  const resume = useResume(`resumeforge_resume_${resumeId}`);
+  const searchParams = useSearchParams();
+  const initialTemplateKey = searchParams.get("template") || undefined;
+  const documentTypeParam = searchParams.get("documentType");
+  const initialDocumentType =
+    documentTypeParam === "resume" || documentTypeParam === "cv" ? documentTypeParam : undefined;
+  const resume = useResume(`resumeforge_resume_${resumeId}`, {
+    initialTemplateKey,
+    initialDocumentType,
+    initialSectionOrder: initialTemplateKey === "registry" ? registrySectionOrder : undefined,
+  });
   const [mobileTab, setMobileTab] = useState<MobileTab>("edit");
   const previewRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const session = useSession()?.data;
 
   if (!resume.loaded) {
     return (
@@ -59,12 +71,21 @@ export default function ResumeEditorPage({ params }: { params: Promise<{ resumeI
           </svg>
           Print / PDF
         </button>
-        <Link href="/dashboard" className="btn-primary flex-1 text-xs py-2.5 justify-center">
+        <button
+          onClick={() => {
+            if (session?.user) {
+              router.push("/dashboard");
+            } else {
+              router.push("/login");
+            }
+          }}
+          className="btn-primary flex-1 text-xs py-2.5 justify-center"
+        >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
           </svg>
-          Dashboard
-        </Link>
+          Save
+        </button>
       </div>
     </div>
   );

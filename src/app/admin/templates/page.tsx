@@ -28,6 +28,13 @@ export default function AdminTemplatesPage() {
       version: 1,
       order: 4,
     },
+    {
+      key: "registry",
+      name: "Registry",
+      active: true,
+      version: 1,
+      order: 5,
+    },
   ];
 
   return (

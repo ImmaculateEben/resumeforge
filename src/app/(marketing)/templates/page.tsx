@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useMemo, useEffect } from "react";
 import {
-  getTemplateComponent,
+  renderTemplate,
   sampleResumeData,
   accentColorMap,
 } from "@/components/templates";
@@ -49,6 +49,16 @@ const templates = [
     color: "from-violet-600 to-purple-700",
     popular: false,
     bestFor: "Technology, Engineering, Startups, Product",
+  },
+  {
+    key: "registry",
+    name: "Registry",
+    description:
+      "A formal CV layout with structured headers, dense single-column rhythm, and a classic presentation suited to detailed profiles.",
+    tags: ["Formal", "CV", "Traditional"],
+    color: "from-stone-600 to-zinc-700",
+    popular: false,
+    bestFor: "Academia, Education, Public Sector, Administration",
   },
 ];
 
@@ -100,6 +110,12 @@ const features = [
   },
 ];
 
+function getBuilderHref(templateKey: string) {
+  return templateKey === "registry"
+    ? "/builder?template=registry&documentType=cv"
+    : `/builder?template=${templateKey}`;
+}
+
 export default function TemplatesPage() {
   const [previewTemplate, setPreviewTemplate] = useState<string | null>(null);
   const [previewAccent, setPreviewAccent] = useState("slate");
@@ -129,10 +145,7 @@ export default function TemplatesPage() {
     [previewAccent]
   );
 
-  const PreviewComponent = useMemo(
-    () => (previewTemplate ? getTemplateComponent(previewTemplate) : null),
-    [previewTemplate]
-  );
+  const previewHref = previewTemplate ? getBuilderHref(previewTemplate) : "/builder";
 
   return (
     <div className="py-16 sm:py-24">
@@ -140,7 +153,7 @@ export default function TemplatesPage() {
         {/* Header */}
         <div className="text-center mb-16 animate-fade-in">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-50 border border-primary-100 mb-6">
-            <span className="text-sm font-medium text-primary-dark">4 professional templates — 100% free</span>
+            <span className="text-sm font-medium text-primary-dark">5 professional templates - 100% free</span>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4">
             Choose Your Template
@@ -167,7 +180,6 @@ export default function TemplatesPage() {
         {/* Templates Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in-up">
           {templates.map((template) => {
-            const TemplateCard = getTemplateComponent(template.key);
             return (
               <div key={template.key} className="card overflow-hidden group">
                 {/* Live Template Preview */}
@@ -188,18 +200,19 @@ export default function TemplatesPage() {
                       transform: `scale(${thumbScale})`,
                       pointerEvents: "none",
                     }}>
-                      <TemplateCard
-                        data={sampleResumeData}
-                        styleConfig={{
+                      {renderTemplate(template.key, {
+                        data: sampleResumeData,
+                        styleConfig: {
                           fontSize: 13,
                           nameFontSize: 26,
                           sectionTitleFontSize: 14,
                           accentTone: "slate",
                           spacing: "normal",
                           showSectionDividers: true,
-                        }}
-                        accentColors={accentColorMap.slate}
-                      />
+                        },
+                        accentColors: accentColorMap.slate,
+                        documentType: template.key === "registry" ? "cv" : "resume",
+                      })}
                     </div>
                   </div>
                   {/* Click to expand hint */}
@@ -231,7 +244,7 @@ export default function TemplatesPage() {
                       </span>
                     ))}
                   </div>
-                  <Link href={`/builder?template=${template.key}`} className="btn-primary text-sm w-full justify-center">
+                  <Link href={getBuilderHref(template.key)} className="btn-primary text-sm w-full justify-center">
                     Use {template.name}
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -275,7 +288,7 @@ export default function TemplatesPage() {
       </div>
 
       {/* Full-size Preview Modal */}
-      {previewTemplate && PreviewComponent && (
+      {previewTemplate && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-center overflow-y-auto py-4 sm:py-8 px-3 sm:px-6" onClick={() => setPreviewTemplate(null)}>
           <div className="relative w-full max-w-[860px] animate-fade-in" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
@@ -295,7 +308,7 @@ export default function TemplatesPage() {
                     />
                   ))}
                 </div>
-                <Link href={`/builder?template=${previewTemplate}`} className="btn-primary text-xs px-3 py-1.5">
+                <Link href={previewHref} className="btn-primary text-xs px-3 py-1.5">
                   Use
                 </Link>
                 <button onClick={() => setPreviewTemplate(null)} className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors">
@@ -314,18 +327,19 @@ export default function TemplatesPage() {
                 transform: modalScale < 1 ? `scale(${modalScale})` : undefined,
                 padding: "40px",
               }}>
-                <PreviewComponent
-                  data={sampleResumeData}
-                  styleConfig={{
+                {renderTemplate(previewTemplate, {
+                  data: sampleResumeData,
+                  styleConfig: {
                     fontSize: 13,
                     nameFontSize: 26,
                     sectionTitleFontSize: 14,
                     accentTone: previewAccent,
                     spacing: "normal",
                     showSectionDividers: true,
-                  }}
-                  accentColors={previewColors}
-                />
+                  },
+                  accentColors: previewColors,
+                  documentType: previewTemplate === "registry" ? "cv" : "resume",
+                })}
               </div>
             </div>
           </div>

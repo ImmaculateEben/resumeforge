@@ -32,7 +32,7 @@ export default function AuthLayout({
               "Free forever — no hidden fees",
               "Download PDFs instantly",
               "Cloud save with version history",
-              "4 professional templates",
+              "5 professional templates",
             ].map((item) => (
               <div key={item} className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">

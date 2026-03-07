@@ -17,7 +17,7 @@ export default function AdminDashboardPage() {
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <p className="text-sm text-gray-600">Templates</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">4</p>
+          <p className="text-3xl font-bold text-gray-900 mt-1">5</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <p className="text-sm text-gray-600">Suspended Users</p>

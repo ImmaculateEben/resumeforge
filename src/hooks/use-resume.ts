@@ -16,22 +16,11 @@ import type {
   SectionOrder,
   SectionTitles,
   SectionKey,
+  PersonalDetails,
+  PersonalDetailRow,
 } from "@/components/templates/types";
 
 const STORAGE_KEY = "resumeforge_draft";
-
-const defaultData: ResumeData = {
-  basics: { fullName: "", email: "" },
-  summary: "",
-  experience: [],
-  education: [],
-  projects: [],
-  skills: [],
-  certifications: [],
-  links: [],
-  referees: [],
-  customSections: [],
-};
 
 const defaultStyleConfig: StyleConfig = {
   fontSize: 13,
@@ -44,79 +33,223 @@ const defaultStyleConfig: StyleConfig = {
 
 export const defaultSectionOrder: SectionOrder[] = [
   { key: "summary", visible: true },
+  { key: "personalDetails", visible: true },
   { key: "experience", visible: true },
   { key: "education", visible: true },
   { key: "skills", visible: true },
   { key: "projects", visible: true },
   { key: "certifications", visible: true },
   { key: "links", visible: true },
+  { key: "hobbies", visible: true },
   { key: "referees", visible: true },
+  { key: "custom", visible: true },
+];
+
+export const registrySectionOrder: SectionOrder[] = [
+  { key: "summary", visible: true },
+  { key: "personalDetails", visible: true },
+  { key: "education", visible: true },
+  { key: "experience", visible: true },
+  { key: "skills", visible: true },
+  { key: "hobbies", visible: true },
+  { key: "referees", visible: true },
+  { key: "projects", visible: true },
+  { key: "certifications", visible: true },
+  { key: "links", visible: true },
   { key: "custom", visible: true },
 ];
 
 const defaultSectionTitles: SectionTitles = {};
 
+export interface ResumeInitOptions {
+  initialTemplateKey?: string;
+  initialDocumentType?: "resume" | "cv";
+  initialSectionOrder?: SectionOrder[];
+}
+
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-export function useResume(storageKey = STORAGE_KEY) {
-  const [data, setData] = useState<ResumeData>(defaultData);
+function createPersonalDetails(): PersonalDetails {
+  return { extraDetails: [] };
+}
+
+function createDefaultData(): ResumeData {
+  return {
+    basics: { fullName: "", email: "" },
+    summary: "",
+    personalDetails: createPersonalDetails(),
+    experience: [],
+    education: [],
+    projects: [],
+    skills: [],
+    certifications: [],
+    links: [],
+    hobbies: [],
+    referees: [],
+    customSections: [],
+  };
+}
+
+function cloneSectionOrder(sectionOrder: SectionOrder[]): SectionOrder[] {
+  return sectionOrder.map((section) => ({ ...section }));
+}
+
+function normalizePersonalDetails(personalDetails?: Partial<PersonalDetails>): PersonalDetails {
+  return {
+    dateOfBirth: personalDetails?.dateOfBirth || "",
+    stateOfOrigin: personalDetails?.stateOfOrigin || "",
+    localGovernmentArea: personalDetails?.localGovernmentArea || "",
+    sex: personalDetails?.sex || "",
+    maritalStatus: personalDetails?.maritalStatus || "",
+    nationality: personalDetails?.nationality || "",
+    religion: personalDetails?.religion || "",
+    extraDetails: (personalDetails?.extraDetails || []).map((detail) => ({
+      id: detail.id || genId(),
+      label: detail.label || "",
+      value: detail.value || "",
+    })),
+  };
+}
+
+function normalizeResumeData(data?: Partial<ResumeData>): ResumeData {
+  return {
+    basics: {
+      fullName: data?.basics?.fullName || "",
+      email: data?.basics?.email || "",
+      phone: data?.basics?.phone || "",
+      location: data?.basics?.location || "",
+      jobTitle: data?.basics?.jobTitle || "",
+      website: data?.basics?.website || "",
+    },
+    summary: data?.summary || "",
+    personalDetails: normalizePersonalDetails(data?.personalDetails),
+    experience: data?.experience || [],
+    education: data?.education || [],
+    projects: data?.projects || [],
+    skills: data?.skills || [],
+    certifications: data?.certifications || [],
+    links: data?.links || [],
+    hobbies: data?.hobbies || [],
+    referees: data?.referees || [],
+    customSections: (data?.customSections || []).map((section) => ({
+      ...section,
+      entryStyle: section.entryStyle || "standard",
+      entries: (section.entries || []).map((entry) => ({
+        ...entry,
+        bullets: entry.bullets || [],
+        tags: entry.tags || [],
+      })),
+    })),
+  };
+}
+
+function normalizeStyleConfig(styleConfig?: Partial<StyleConfig> & { fontScale?: "compact" | "comfortable" }) {
+  return {
+    fontSize: styleConfig?.fontSize ?? (styleConfig?.fontScale === "compact" ? 11 : 13),
+    nameFontSize: styleConfig?.nameFontSize ?? 26,
+    sectionTitleFontSize: styleConfig?.sectionTitleFontSize ?? 14,
+    accentTone: styleConfig?.accentTone || "slate",
+    spacing: styleConfig?.spacing || "normal",
+    showSectionDividers: styleConfig?.showSectionDividers ?? true,
+  } satisfies StyleConfig;
+}
+
+function normalizeSectionOrder(sectionOrder?: SectionOrder[], fallback = defaultSectionOrder): SectionOrder[] {
+  const base = cloneSectionOrder(fallback);
+  if (!sectionOrder || sectionOrder.length === 0) {
+    return base;
+  }
+
+  const seen = new Set<SectionKey>();
+  const normalized: SectionOrder[] = [];
+
+  for (const section of sectionOrder) {
+    if (!section?.key || seen.has(section.key)) {
+      continue;
+    }
+    seen.add(section.key);
+    normalized.push({ key: section.key, visible: section.visible ?? true });
+  }
+
+  for (const section of base) {
+    if (!seen.has(section.key)) {
+      normalized.push(section);
+    }
+  }
+
+  return normalized;
+}
+
+function normalizeSectionTitles(sectionTitles?: SectionTitles): SectionTitles {
+  return sectionTitles || defaultSectionTitles;
+}
+
+export function useResume(storageKey = STORAGE_KEY, initOptions: ResumeInitOptions = {}) {
+  const initialOptionsRef = useRef(initOptions);
+  const [data, setData] = useState<ResumeData>(createDefaultData);
   const [styleConfig, setStyleConfig] = useState<StyleConfig>(defaultStyleConfig);
   const [templateKey, setTemplateKey] = useState("atlas");
   const [documentType, setDocumentType] = useState<"resume" | "cv">("resume");
-  const [sectionOrder, setSectionOrder] = useState<SectionOrder[]>(defaultSectionOrder);
+  const [sectionOrder, setSectionOrder] = useState<SectionOrder[]>(cloneSectionOrder(defaultSectionOrder));
   const [sectionTitles, setSectionTitles] = useState<SectionTitles>(defaultSectionTitles);
   const [loaded, setLoaded] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // Load from localStorage
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.basics) {
-          setData({
-            basics: parsed.basics || defaultData.basics,
-            summary: parsed.summary || "",
-            experience: parsed.experience || [],
-            education: parsed.education || [],
-            projects: parsed.projects || [],
-            skills: parsed.skills || [],
-            certifications: parsed.certifications || [],
-            links: parsed.links || [],
-            referees: parsed.referees || [],
-            customSections: (parsed.customSections || []).map((s: CustomSection) => ({
-              ...s,
-              entryStyle: s.entryStyle || "standard",
-            })),
-          });
+    const initialOptions = initialOptionsRef.current;
+    let cancelled = false;
+
+    queueMicrotask(() => {
+      if (cancelled) return;
+
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+
+          if (parsed.basics) {
+            setData(normalizeResumeData(parsed));
+          }
+          if (parsed.styleConfig) {
+            setStyleConfig(normalizeStyleConfig(parsed.styleConfig));
+          }
+          if (parsed.templateKey) {
+            setTemplateKey(parsed.templateKey);
+          }
+          if (parsed.documentType) {
+            setDocumentType(parsed.documentType);
+          }
+          if (parsed.sectionOrder) {
+            setSectionOrder(normalizeSectionOrder(parsed.sectionOrder));
+          }
+          if (parsed.sectionTitles) {
+            setSectionTitles(normalizeSectionTitles(parsed.sectionTitles));
+          }
+        } else {
+          if (initialOptions.initialTemplateKey) {
+            setTemplateKey(initialOptions.initialTemplateKey);
+          }
+          if (initialOptions.initialDocumentType) {
+            setDocumentType(initialOptions.initialDocumentType);
+          }
+          if (initialOptions.initialSectionOrder) {
+            setSectionOrder(normalizeSectionOrder(initialOptions.initialSectionOrder));
+          }
         }
-        if (parsed.styleConfig) {
-          // Migrate old fontScale-based configs
-          const sc = parsed.styleConfig;
-          setStyleConfig({
-            fontSize: sc.fontSize ?? (sc.fontScale === "compact" ? 11 : 13),
-            nameFontSize: sc.nameFontSize ?? 26,
-            sectionTitleFontSize: sc.sectionTitleFontSize ?? 14,
-            accentTone: sc.accentTone || "slate",
-            spacing: sc.spacing || "normal",
-            showSectionDividers: sc.showSectionDividers ?? true,
-          });
-        }
-        if (parsed.templateKey) setTemplateKey(parsed.templateKey);
-        if (parsed.documentType) setDocumentType(parsed.documentType);
-        if (parsed.sectionOrder) setSectionOrder(parsed.sectionOrder);
-        if (parsed.sectionTitles) setSectionTitles(parsed.sectionTitles);
+      } catch {
+        // Ignore parse errors and fall back to defaults.
       }
-    } catch {
-      // Ignore parse errors
-    }
-    setLoaded(true);
+
+      setLoaded(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [storageKey]);
 
-  // Debounced auto-save
   useEffect(() => {
     if (!loaded) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -124,10 +257,11 @@ export function useResume(storageKey = STORAGE_KEY) {
       const fullData = { ...data, styleConfig, templateKey, documentType, sectionOrder, sectionTitles };
       localStorage.setItem(storageKey, JSON.stringify(fullData));
     }, 400);
-    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
   }, [data, styleConfig, templateKey, documentType, sectionOrder, sectionTitles, loaded, storageKey]);
 
-  // Basics
   const updateBasics = useCallback((updates: Partial<ResumeData["basics"]>) => {
     setData((prev) => ({ ...prev, basics: { ...prev.basics, ...updates } }));
   }, []);
@@ -136,165 +270,327 @@ export function useResume(storageKey = STORAGE_KEY) {
     setData((prev) => ({ ...prev, summary }));
   }, []);
 
-  // Experience
+  const updatePersonalDetails = useCallback((updates: Partial<PersonalDetails>) => {
+    setData((prev) => ({
+      ...prev,
+      personalDetails: {
+        ...prev.personalDetails,
+        ...updates,
+        extraDetails: updates.extraDetails ?? prev.personalDetails.extraDetails,
+      },
+    }));
+  }, []);
+
+  const addPersonalDetailRow = useCallback((): string => {
+    const id = genId();
+    setData((prev) => ({
+      ...prev,
+      personalDetails: {
+        ...prev.personalDetails,
+        extraDetails: [...prev.personalDetails.extraDetails, { id, label: "", value: "" }],
+      },
+    }));
+    return id;
+  }, []);
+
+  const updatePersonalDetailRow = useCallback((id: string, updates: Partial<PersonalDetailRow>) => {
+    setData((prev) => ({
+      ...prev,
+      personalDetails: {
+        ...prev.personalDetails,
+        extraDetails: prev.personalDetails.extraDetails.map((detail) =>
+          detail.id === id ? { ...detail, ...updates } : detail
+        ),
+      },
+    }));
+  }, []);
+
+  const removePersonalDetailRow = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      personalDetails: {
+        ...prev.personalDetails,
+        extraDetails: prev.personalDetails.extraDetails.filter((detail) => detail.id !== id),
+      },
+    }));
+  }, []);
+
+  const addHobby = useCallback(() => {
+    setData((prev) => ({ ...prev, hobbies: [...prev.hobbies, ""] }));
+  }, []);
+
+  const updateHobby = useCallback((index: number, value: string) => {
+    setData((prev) => ({
+      ...prev,
+      hobbies: prev.hobbies.map((hobby, hobbyIndex) => (hobbyIndex === index ? value : hobby)),
+    }));
+  }, []);
+
+  const removeHobby = useCallback((index: number) => {
+    setData((prev) => ({
+      ...prev,
+      hobbies: prev.hobbies.filter((_, hobbyIndex) => hobbyIndex !== index),
+    }));
+  }, []);
+
   const addExperience = useCallback((): string => {
     const id = genId();
-    setData((prev) => ({ ...prev, experience: [...prev.experience, { id, company: "", position: "", startDate: "", bullets: [] }] }));
+    setData((prev) => ({
+      ...prev,
+      experience: [...prev.experience, { id, company: "", position: "", startDate: "", bullets: [] }],
+    }));
     return id;
   }, []);
+
   const updateExperience = useCallback((id: string, updates: Partial<ExperienceItem>) => {
-    setData((prev) => ({ ...prev, experience: prev.experience.map((e) => (e.id === id ? { ...e, ...updates } : e)) }));
+    setData((prev) => ({
+      ...prev,
+      experience: prev.experience.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+    }));
   }, []);
+
   const removeExperience = useCallback((id: string) => {
-    setData((prev) => ({ ...prev, experience: prev.experience.filter((e) => e.id !== id) }));
+    setData((prev) => ({ ...prev, experience: prev.experience.filter((item) => item.id !== id) }));
   }, []);
+
   const moveExperience = useCallback((id: string, direction: "up" | "down") => {
     setData((prev) => {
-      const arr = [...prev.experience];
-      const idx = arr.findIndex((e) => e.id === id);
-      if (idx < 0) return prev;
-      const target = direction === "up" ? idx - 1 : idx + 1;
-      if (target < 0 || target >= arr.length) return prev;
-      [arr[idx], arr[target]] = [arr[target], arr[idx]];
-      return { ...prev, experience: arr };
+      const items = [...prev.experience];
+      const index = items.findIndex((item) => item.id === id);
+      if (index < 0) return prev;
+      const target = direction === "up" ? index - 1 : index + 1;
+      if (target < 0 || target >= items.length) return prev;
+      [items[index], items[target]] = [items[target], items[index]];
+      return { ...prev, experience: items };
     });
   }, []);
 
-  // Education
   const addEducation = useCallback((): string => {
     const id = genId();
-    setData((prev) => ({ ...prev, education: [...prev.education, { id, institution: "", degree: "", bullets: [] }] }));
+    setData((prev) => ({
+      ...prev,
+      education: [...prev.education, { id, institution: "", degree: "", bullets: [] }],
+    }));
     return id;
   }, []);
+
   const updateEducation = useCallback((id: string, updates: Partial<EducationItem>) => {
-    setData((prev) => ({ ...prev, education: prev.education.map((e) => (e.id === id ? { ...e, ...updates } : e)) }));
+    setData((prev) => ({
+      ...prev,
+      education: prev.education.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+    }));
   }, []);
+
   const removeEducation = useCallback((id: string) => {
-    setData((prev) => ({ ...prev, education: prev.education.filter((e) => e.id !== id) }));
+    setData((prev) => ({ ...prev, education: prev.education.filter((item) => item.id !== id) }));
   }, []);
+
   const moveEducation = useCallback((id: string, direction: "up" | "down") => {
     setData((prev) => {
-      const arr = [...prev.education];
-      const idx = arr.findIndex((e) => e.id === id);
-      if (idx < 0) return prev;
-      const target = direction === "up" ? idx - 1 : idx + 1;
-      if (target < 0 || target >= arr.length) return prev;
-      [arr[idx], arr[target]] = [arr[target], arr[idx]];
-      return { ...prev, education: arr };
+      const items = [...prev.education];
+      const index = items.findIndex((item) => item.id === id);
+      if (index < 0) return prev;
+      const target = direction === "up" ? index - 1 : index + 1;
+      if (target < 0 || target >= items.length) return prev;
+      [items[index], items[target]] = [items[target], items[index]];
+      return { ...prev, education: items };
     });
   }, []);
 
-  // Projects
   const addProject = useCallback((): string => {
     const id = genId();
-    setData((prev) => ({ ...prev, projects: [...prev.projects, { id, name: "", bullets: [] }] }));
+    setData((prev) => ({
+      ...prev,
+      projects: [...prev.projects, { id, name: "", bullets: [] }],
+    }));
     return id;
   }, []);
+
   const updateProject = useCallback((id: string, updates: Partial<ProjectItem>) => {
-    setData((prev) => ({ ...prev, projects: prev.projects.map((e) => (e.id === id ? { ...e, ...updates } : e)) }));
-  }, []);
-  const removeProject = useCallback((id: string) => {
-    setData((prev) => ({ ...prev, projects: prev.projects.filter((e) => e.id !== id) }));
+    setData((prev) => ({
+      ...prev,
+      projects: prev.projects.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+    }));
   }, []);
 
-  // Skills
+  const removeProject = useCallback((id: string) => {
+    setData((prev) => ({ ...prev, projects: prev.projects.filter((item) => item.id !== id) }));
+  }, []);
+
   const addSkillGroup = useCallback((): string => {
     const id = genId();
-    setData((prev) => ({ ...prev, skills: [...prev.skills, { id, category: "", items: [] }] }));
+    setData((prev) => ({
+      ...prev,
+      skills: [...prev.skills, { id, category: "", items: [] }],
+    }));
     return id;
   }, []);
+
   const updateSkillGroup = useCallback((id: string, updates: Partial<SkillGroup>) => {
-    setData((prev) => ({ ...prev, skills: prev.skills.map((e) => (e.id === id ? { ...e, ...updates } : e)) }));
-  }, []);
-  const removeSkillGroup = useCallback((id: string) => {
-    setData((prev) => ({ ...prev, skills: prev.skills.filter((e) => e.id !== id) }));
-  }, []);
-  const addSkillItem = useCallback((groupId: string, item: string) => {
-    setData((prev) => ({ ...prev, skills: prev.skills.map((g) => g.id === groupId ? { ...g, items: [...g.items, item] } : g) }));
-  }, []);
-  const removeSkillItem = useCallback((groupId: string, index: number) => {
-    setData((prev) => ({ ...prev, skills: prev.skills.map((g) => g.id === groupId ? { ...g, items: g.items.filter((_, i) => i !== index) } : g) }));
+    setData((prev) => ({
+      ...prev,
+      skills: prev.skills.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+    }));
   }, []);
 
-  // Certifications
+  const removeSkillGroup = useCallback((id: string) => {
+    setData((prev) => ({ ...prev, skills: prev.skills.filter((item) => item.id !== id) }));
+  }, []);
+
+  const addSkillItem = useCallback((groupId: string, item: string) => {
+    setData((prev) => ({
+      ...prev,
+      skills: prev.skills.map((group) =>
+        group.id === groupId ? { ...group, items: [...group.items, item] } : group
+      ),
+    }));
+  }, []);
+
+  const removeSkillItem = useCallback((groupId: string, index: number) => {
+    setData((prev) => ({
+      ...prev,
+      skills: prev.skills.map((group) =>
+        group.id === groupId
+          ? { ...group, items: group.items.filter((_, itemIndex) => itemIndex !== index) }
+          : group
+      ),
+    }));
+  }, []);
+
   const addCertification = useCallback((): string => {
     const id = genId();
-    setData((prev) => ({ ...prev, certifications: [...prev.certifications, { id, name: "" }] }));
+    setData((prev) => ({
+      ...prev,
+      certifications: [...prev.certifications, { id, name: "" }],
+    }));
     return id;
   }, []);
+
   const updateCertification = useCallback((id: string, updates: Partial<CertificationItem>) => {
-    setData((prev) => ({ ...prev, certifications: prev.certifications.map((e) => (e.id === id ? { ...e, ...updates } : e)) }));
-  }, []);
-  const removeCertification = useCallback((id: string) => {
-    setData((prev) => ({ ...prev, certifications: prev.certifications.filter((e) => e.id !== id) }));
+    setData((prev) => ({
+      ...prev,
+      certifications: prev.certifications.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+    }));
   }, []);
 
-  // Links
+  const removeCertification = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      certifications: prev.certifications.filter((item) => item.id !== id),
+    }));
+  }, []);
+
   const addLink = useCallback((): string => {
     const id = genId();
-    setData((prev) => ({ ...prev, links: [...prev.links, { id, label: "", url: "" }] }));
+    setData((prev) => ({
+      ...prev,
+      links: [...prev.links, { id, label: "", url: "" }],
+    }));
     return id;
   }, []);
+
   const updateLink = useCallback((id: string, updates: Partial<LinkItem>) => {
-    setData((prev) => ({ ...prev, links: prev.links.map((e) => (e.id === id ? { ...e, ...updates } : e)) }));
-  }, []);
-  const removeLink = useCallback((id: string) => {
-    setData((prev) => ({ ...prev, links: prev.links.filter((e) => e.id !== id) }));
+    setData((prev) => ({
+      ...prev,
+      links: prev.links.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+    }));
   }, []);
 
-  // Referees
+  const removeLink = useCallback((id: string) => {
+    setData((prev) => ({ ...prev, links: prev.links.filter((item) => item.id !== id) }));
+  }, []);
+
   const addReferee = useCallback((): string => {
     const id = genId();
-    setData((prev) => ({ ...prev, referees: [...prev.referees, { id, name: "" }] }));
+    setData((prev) => ({
+      ...prev,
+      referees: [...prev.referees, { id, name: "" }],
+    }));
     return id;
-  }, []);
-  const updateReferee = useCallback((id: string, updates: Partial<RefereeItem>) => {
-    setData((prev) => ({ ...prev, referees: prev.referees.map((e) => (e.id === id ? { ...e, ...updates } : e)) }));
-  }, []);
-  const removeReferee = useCallback((id: string) => {
-    setData((prev) => ({ ...prev, referees: prev.referees.filter((e) => e.id !== id) }));
   }, []);
 
-  // Custom Sections
+  const updateReferee = useCallback((id: string, updates: Partial<RefereeItem>) => {
+    setData((prev) => ({
+      ...prev,
+      referees: prev.referees.map((item) => (item.id === id ? { ...item, ...updates } : item)),
+    }));
+  }, []);
+
+  const removeReferee = useCallback((id: string) => {
+    setData((prev) => ({ ...prev, referees: prev.referees.filter((item) => item.id !== id) }));
+  }, []);
+
   const addCustomSection = useCallback((): string => {
     const id = genId();
-    setData((prev) => ({ ...prev, customSections: [...prev.customSections, { id, title: "", entryStyle: "standard" as const, entries: [] }] }));
+    setData((prev) => ({
+      ...prev,
+      customSections: [
+        ...prev.customSections,
+        { id, title: "", entryStyle: "standard" as const, entries: [] },
+      ],
+    }));
     return id;
   }, []);
+
   const updateCustomSection = useCallback((id: string, updates: Partial<CustomSection>) => {
-    setData((prev) => ({ ...prev, customSections: prev.customSections.map((s) => (s.id === id ? { ...s, ...updates } : s)) }));
+    setData((prev) => ({
+      ...prev,
+      customSections: prev.customSections.map((section) =>
+        section.id === id ? { ...section, ...updates } : section
+      ),
+    }));
   }, []);
+
   const removeCustomSection = useCallback((id: string) => {
-    setData((prev) => ({ ...prev, customSections: prev.customSections.filter((s) => s.id !== id) }));
+    setData((prev) => ({
+      ...prev,
+      customSections: prev.customSections.filter((section) => section.id !== id),
+    }));
   }, []);
+
   const addCustomEntry = useCallback((sectionId: string): string => {
     const id = genId();
     setData((prev) => ({
       ...prev,
-      customSections: prev.customSections.map((s) =>
-        s.id === sectionId ? { ...s, entries: [...s.entries, { id, heading: "", bullets: [] }] } : s
+      customSections: prev.customSections.map((section) =>
+        section.id === sectionId
+          ? { ...section, entries: [...section.entries, { id, heading: "", bullets: [] }] }
+          : section
       ),
     }));
     return id;
   }, []);
-  const updateCustomEntry = useCallback((sectionId: string, entryId: string, updates: Partial<CustomSectionEntry>) => {
-    setData((prev) => ({
-      ...prev,
-      customSections: prev.customSections.map((s) =>
-        s.id === sectionId ? { ...s, entries: s.entries.map((e) => (e.id === entryId ? { ...e, ...updates } : e)) } : s
-      ),
-    }));
-  }, []);
+
+  const updateCustomEntry = useCallback(
+    (sectionId: string, entryId: string, updates: Partial<CustomSectionEntry>) => {
+      setData((prev) => ({
+        ...prev,
+        customSections: prev.customSections.map((section) =>
+          section.id === sectionId
+            ? {
+                ...section,
+                entries: section.entries.map((entry) =>
+                  entry.id === entryId ? { ...entry, ...updates } : entry
+                ),
+              }
+            : section
+        ),
+      }));
+    },
+    []
+  );
+
   const removeCustomEntry = useCallback((sectionId: string, entryId: string) => {
     setData((prev) => ({
       ...prev,
-      customSections: prev.customSections.map((s) =>
-        s.id === sectionId ? { ...s, entries: s.entries.filter((e) => e.id !== entryId) } : s
+      customSections: prev.customSections.map((section) =>
+        section.id === sectionId
+          ? { ...section, entries: section.entries.filter((entry) => entry.id !== entryId) }
+          : section
       ),
     }));
   }, []);
 
-  // Bullet helpers
   const addBullet = useCallback((section: "experience" | "education" | "projects", itemId: string) => {
     setData((prev) => ({
       ...prev,
@@ -303,103 +599,103 @@ export function useResume(storageKey = STORAGE_KEY) {
       ),
     }));
   }, []);
-  const updateBullet = useCallback((section: "experience" | "education" | "projects", itemId: string, bulletIdx: number, text: string) => {
-    setData((prev) => ({
-      ...prev,
-      [section]: (prev[section] as Array<{ id: string; bullets: string[] }>).map((item) =>
-        item.id === itemId ? { ...item, bullets: item.bullets.map((b, i) => (i === bulletIdx ? text : b)) } : item
-      ),
-    }));
-  }, []);
-  const removeBullet = useCallback((section: "experience" | "education" | "projects", itemId: string, bulletIdx: number) => {
-    setData((prev) => ({
-      ...prev,
-      [section]: (prev[section] as Array<{ id: string; bullets: string[] }>).map((item) =>
-        item.id === itemId ? { ...item, bullets: item.bullets.filter((_, i) => i !== bulletIdx) } : item
-      ),
-    }));
-  }, []);
 
-  // Section order helpers
+  const updateBullet = useCallback(
+    (section: "experience" | "education" | "projects", itemId: string, bulletIndex: number, text: string) => {
+      setData((prev) => ({
+        ...prev,
+        [section]: (prev[section] as Array<{ id: string; bullets: string[] }>).map((item) =>
+          item.id === itemId
+            ? {
+                ...item,
+                bullets: item.bullets.map((bullet, currentIndex) =>
+                  currentIndex === bulletIndex ? text : bullet
+                ),
+              }
+            : item
+        ),
+      }));
+    },
+    []
+  );
+
+  const removeBullet = useCallback(
+    (section: "experience" | "education" | "projects", itemId: string, bulletIndex: number) => {
+      setData((prev) => ({
+        ...prev,
+        [section]: (prev[section] as Array<{ id: string; bullets: string[] }>).map((item) =>
+          item.id === itemId
+            ? { ...item, bullets: item.bullets.filter((_, currentIndex) => currentIndex !== bulletIndex) }
+            : item
+        ),
+      }));
+    },
+    []
+  );
+
   const moveSection = useCallback((key: SectionKey, direction: "up" | "down") => {
     setSectionOrder((prev) => {
-      const arr = [...prev];
-      const idx = arr.findIndex((s) => s.key === key);
-      if (idx < 0) return prev;
-      const target = direction === "up" ? idx - 1 : idx + 1;
-      if (target < 0 || target >= arr.length) return prev;
-      [arr[idx], arr[target]] = [arr[target], arr[idx]];
-      return arr;
+      const items = [...prev];
+      const index = items.findIndex((item) => item.key === key);
+      if (index < 0) return prev;
+      const target = direction === "up" ? index - 1 : index + 1;
+      if (target < 0 || target >= items.length) return prev;
+      [items[index], items[target]] = [items[target], items[index]];
+      return items;
     });
   }, []);
+
   const toggleSectionVisibility = useCallback((key: SectionKey) => {
-    setSectionOrder((prev) => prev.map((s) => (s.key === key ? { ...s, visible: !s.visible } : s)));
+    setSectionOrder((prev) =>
+      prev.map((section) => (section.key === key ? { ...section, visible: !section.visible } : section))
+    );
   }, []);
 
-  // Section title helpers
   const updateSectionTitle = useCallback((key: keyof SectionTitles, title: string) => {
     setSectionTitles((prev) => ({ ...prev, [key]: title || undefined }));
   }, []);
 
-  // Export (still useful for JSON download)
   const exportJSON = useCallback(() => {
     const payload = { schemaVersion: "1.0", documentType, templateKey, ...data, styleConfig, sectionOrder, sectionTitles };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `resume-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `resume-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
     URL.revokeObjectURL(url);
   }, [data, styleConfig, templateKey, documentType, sectionOrder, sectionTitles]);
 
   const importJSON = useCallback((jsonString: string): boolean => {
     try {
       const parsed = JSON.parse(jsonString);
-      if (parsed.basics) {
-        setData({
-          basics: parsed.basics || defaultData.basics,
-          summary: parsed.summary || "",
-          experience: parsed.experience || [],
-          education: parsed.education || [],
-          projects: parsed.projects || [],
-          skills: parsed.skills || [],
-          certifications: parsed.certifications || [],
-          links: parsed.links || [],
-          referees: parsed.referees || [],
-          customSections: (parsed.customSections || []).map((s: CustomSection) => ({ ...s, entryStyle: s.entryStyle || "standard" })),
-        });
-        if (parsed.styleConfig) {
-          const sc = parsed.styleConfig;
-          setStyleConfig({
-            fontSize: sc.fontSize ?? (sc.fontScale === "compact" ? 11 : 13),
-            nameFontSize: sc.nameFontSize ?? 26,
-            sectionTitleFontSize: sc.sectionTitleFontSize ?? 14,
-            accentTone: sc.accentTone || "slate",
-            spacing: sc.spacing || "normal",
-            showSectionDividers: sc.showSectionDividers ?? true,
-          });
-        }
-        if (parsed.templateKey) setTemplateKey(parsed.templateKey);
-        if (parsed.documentType) setDocumentType(parsed.documentType);
-        if (parsed.sectionOrder) setSectionOrder(parsed.sectionOrder);
-        if (parsed.sectionTitles) setSectionTitles(parsed.sectionTitles);
-        return true;
+      if (!parsed.basics) {
+        return false;
       }
-      return false;
+
+      setData(normalizeResumeData(parsed));
+      if (parsed.styleConfig) {
+        setStyleConfig(normalizeStyleConfig(parsed.styleConfig));
+      }
+      setTemplateKey(parsed.templateKey || "atlas");
+      setDocumentType(parsed.documentType || "resume");
+      setSectionOrder(normalizeSectionOrder(parsed.sectionOrder));
+      setSectionTitles(normalizeSectionTitles(parsed.sectionTitles));
+
+      return true;
     } catch {
       return false;
     }
   }, []);
 
   const clearAll = useCallback(() => {
-    setData(defaultData);
+    setData(createDefaultData());
     setStyleConfig(defaultStyleConfig);
     setTemplateKey("atlas");
     setDocumentType("resume");
-    setSectionOrder(defaultSectionOrder);
+    setSectionOrder(cloneSectionOrder(defaultSectionOrder));
     setSectionTitles(defaultSectionTitles);
     localStorage.removeItem(storageKey);
   }, [storageKey]);
@@ -416,20 +712,65 @@ export function useResume(storageKey = STORAGE_KEY) {
   })();
 
   return {
-    data, styleConfig, templateKey, documentType, sectionOrder, sectionTitles, loaded, completionPercent,
-    setStyleConfig, setTemplateKey, setDocumentType,
-    updateBasics, updateSummary,
-    addExperience, updateExperience, removeExperience, moveExperience,
-    addEducation, updateEducation, removeEducation, moveEducation,
-    addProject, updateProject, removeProject,
-    addSkillGroup, updateSkillGroup, removeSkillGroup, addSkillItem, removeSkillItem,
-    addCertification, updateCertification, removeCertification,
-    addLink, updateLink, removeLink,
-    addReferee, updateReferee, removeReferee,
-    addCustomSection, updateCustomSection, removeCustomSection,
-    addCustomEntry, updateCustomEntry, removeCustomEntry,
-    addBullet, updateBullet, removeBullet,
-    moveSection, toggleSectionVisibility, updateSectionTitle,
-    exportJSON, importJSON, clearAll,
+    data,
+    styleConfig,
+    templateKey,
+    documentType,
+    sectionOrder,
+    sectionTitles,
+    loaded,
+    completionPercent,
+    setStyleConfig,
+    setTemplateKey,
+    setDocumentType,
+    updateBasics,
+    updateSummary,
+    updatePersonalDetails,
+    addPersonalDetailRow,
+    updatePersonalDetailRow,
+    removePersonalDetailRow,
+    addHobby,
+    updateHobby,
+    removeHobby,
+    addExperience,
+    updateExperience,
+    removeExperience,
+    moveExperience,
+    addEducation,
+    updateEducation,
+    removeEducation,
+    moveEducation,
+    addProject,
+    updateProject,
+    removeProject,
+    addSkillGroup,
+    updateSkillGroup,
+    removeSkillGroup,
+    addSkillItem,
+    removeSkillItem,
+    addCertification,
+    updateCertification,
+    removeCertification,
+    addLink,
+    updateLink,
+    removeLink,
+    addReferee,
+    updateReferee,
+    removeReferee,
+    addCustomSection,
+    updateCustomSection,
+    removeCustomSection,
+    addCustomEntry,
+    updateCustomEntry,
+    removeCustomEntry,
+    addBullet,
+    updateBullet,
+    removeBullet,
+    moveSection,
+    toggleSectionVisibility,
+    updateSectionTitle,
+    exportJSON,
+    importJSON,
+    clearAll,
   };
 }

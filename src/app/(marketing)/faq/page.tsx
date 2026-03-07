@@ -27,7 +27,7 @@ const faqs = [
   {
     question: "Are the templates ATS-friendly?",
     answer:
-      "Yes. All four templates are designed to pass Applicant Tracking Systems with clean formatting, standard section headers, and structured content. They work with all major ATS platforms.",
+      "Yes. All five templates are designed to pass Applicant Tracking Systems with clean formatting, standard section headers, and structured content. They work with all major ATS platforms.",
   },
   {
     question: "Can I use different templates for different resumes?",

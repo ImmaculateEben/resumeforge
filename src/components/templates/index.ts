@@ -1,9 +1,14 @@
+import { createElement } from "react";
+
 export { AtlasTemplate } from "./Atlas";
 export { SummitTemplate } from "./Summit";
 export { QuillTemplate } from "./Quill";
 export { NorthstarTemplate } from "./Northstar";
+export { RegistryTemplate } from "./Registry";
 export type {
   ResumeData,
+  PersonalDetails,
+  PersonalDetailRow,
   ExperienceItem,
   EducationItem,
   ProjectItem,
@@ -28,14 +33,32 @@ import { AtlasTemplate } from "./Atlas";
 import { SummitTemplate } from "./Summit";
 import { QuillTemplate } from "./Quill";
 import { NorthstarTemplate } from "./Northstar";
+import { RegistryTemplate } from "./Registry";
 
 const templateRegistry: Record<string, React.ComponentType<TemplateProps>> = {
   atlas: AtlasTemplate,
   summit: SummitTemplate,
   quill: QuillTemplate,
   northstar: NorthstarTemplate,
+  registry: RegistryTemplate,
 };
 
 export function getTemplateComponent(key: string): React.ComponentType<TemplateProps> {
   return templateRegistry[key] || AtlasTemplate;
+}
+
+export function renderTemplate(key: string, props: TemplateProps) {
+  switch (key) {
+    case "summit":
+      return createElement(SummitTemplate, props);
+    case "quill":
+      return createElement(QuillTemplate, props);
+    case "northstar":
+      return createElement(NorthstarTemplate, props);
+    case "registry":
+      return createElement(RegistryTemplate, props);
+    case "atlas":
+    default:
+      return createElement(AtlasTemplate, props);
+  }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   getTemplateComponent,
   sampleResumeData,
@@ -103,6 +103,26 @@ const features = [
 export default function TemplatesPage() {
   const [previewTemplate, setPreviewTemplate] = useState<string | null>(null);
   const [previewAccent, setPreviewAccent] = useState("slate");
+  const [thumbScale, setThumbScale] = useState(0.38);
+  // modalScale is 1 on wide screens (template fits naturally) and <1 on tablet/mobile
+  const [modalScale, setModalScale] = useState(0.4);
+
+  useEffect(() => {
+    const compute = () => {
+      const cols = window.innerWidth >= 1024 ? 2 : 1;
+      const pagePad = window.innerWidth >= 1024 ? 64 : window.innerWidth >= 640 ? 48 : 32;
+      const gap = cols > 1 ? 32 : 0;
+      const cardW = (Math.min(window.innerWidth, 1280) - pagePad - gap) / cols;
+      const cardPad = window.innerWidth >= 640 ? 64 : 48;
+      setThumbScale((cardW - cardPad) / 794);
+      // modal gets full viewport minus 24px padding on each side
+      const modalAvailableW = Math.min(window.innerWidth - 48, 794);
+      setModalScale(modalAvailableW / 794);
+    };
+    compute();
+    window.addEventListener("resize", compute);
+    return () => window.removeEventListener("resize", compute);
+  }, []);
 
   const previewColors = useMemo<AccentColors>(
     () => accentColorMap[previewAccent] || accentColorMap.slate,
@@ -160,16 +180,22 @@ export default function TemplatesPage() {
                   <div
                     className="bg-white rounded-lg shadow-2xl overflow-hidden group-hover:scale-[1.02] transition-transform duration-500 cursor-pointer"
                     onClick={() => setPreviewTemplate(template.key)}
+                    style={{ height: `${Math.round(794 * 1.414 * thumbScale * 0.6)}px` }}
                   >
-                    <div className="p-5 sm:p-6" style={{ fontSize: "5.5px", lineHeight: 1.4 }}>
+                    <div style={{
+                      width: "794px",
+                      transformOrigin: "top left",
+                      transform: `scale(${thumbScale})`,
+                      pointerEvents: "none",
+                    }}>
                       <TemplateCard
                         data={sampleResumeData}
                         styleConfig={{
-                          fontSize: 11,
-                          nameFontSize: 24,
-                          sectionTitleFontSize: 13,
+                          fontSize: 13,
+                          nameFontSize: 26,
+                          sectionTitleFontSize: 14,
                           accentTone: "slate",
-                          spacing: "tight",
+                          spacing: "normal",
                           showSectionDividers: true,
                         }}
                         accentColors={accentColorMap.slate}
@@ -250,49 +276,57 @@ export default function TemplatesPage() {
 
       {/* Full-size Preview Modal */}
       {previewTemplate && PreviewComponent && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-center overflow-y-auto py-8 px-4" onClick={() => setPreviewTemplate(null)}>
-          <div className="relative w-full max-w-[210mm] animate-fade-in" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-center overflow-y-auto py-4 sm:py-8 px-3 sm:px-6" onClick={() => setPreviewTemplate(null)}>
+          <div className="relative w-full max-w-[860px] animate-fade-in" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between bg-white/95 backdrop-blur-sm rounded-t-xl px-6 py-4 border-b border-gray-100">
+            <div className="sticky top-0 z-10 flex items-center justify-between bg-white/95 backdrop-blur-sm rounded-t-xl px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100">
               <div>
-                <h3 className="text-lg font-bold text-gray-900 capitalize">{previewTemplate} Template</h3>
-                <p className="text-xs text-gray-400">Full-size preview with sample data</p>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 capitalize">{previewTemplate} Template</h3>
+                <p className="text-xs text-gray-400 hidden sm:block">Full-size preview with sample data</p>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1.5">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex gap-1 sm:gap-1.5">
                   {accentOptions.map((c) => (
                     <button
                       key={c.key}
                       onClick={() => setPreviewAccent(c.key)}
-                      className={`w-5 h-5 rounded-full ${c.class} transition-all ${previewAccent === c.key ? "ring-2 ring-offset-1 ring-primary scale-110" : "hover:scale-110"}`}
+                      className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full ${c.class} transition-all ${previewAccent === c.key ? "ring-2 ring-offset-1 ring-primary scale-110" : "hover:scale-110"}`}
                       title={c.label}
                     />
                   ))}
                 </div>
-                <Link href={`/builder?template=${previewTemplate}`} className="btn-primary text-xs px-4 py-2">
-                  Use Template
+                <Link href={`/builder?template=${previewTemplate}`} className="btn-primary text-xs px-3 py-1.5">
+                  Use
                 </Link>
-                <button onClick={() => setPreviewTemplate(null)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <button onClick={() => setPreviewTemplate(null)} className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             </div>
-            {/* Preview Body */}
-            <div className="bg-white rounded-b-xl p-10 sm:p-12 shadow-2xl min-h-[297mm]">
-              <PreviewComponent
-                data={sampleResumeData}
-                styleConfig={{
-                  fontSize: 13,
-                  nameFontSize: 26,
-                  sectionTitleFontSize: 14,
-                  accentTone: previewAccent,
-                  spacing: "normal",
-                  showSectionDividers: true,
-                }}
-                accentColors={previewColors}
-              />
+            {/* Preview Body — single scaled path, works on mobile / tablet / desktop */}
+            <div className="bg-white rounded-b-xl overflow-hidden shadow-2xl"
+              style={{ height: modalScale < 1 ? `${Math.round(modalScale * 794 * 1.414)}px` : undefined }}>
+              <div style={{
+                width: "794px",
+                transformOrigin: "top left",
+                transform: modalScale < 1 ? `scale(${modalScale})` : undefined,
+                padding: "40px",
+              }}>
+                <PreviewComponent
+                  data={sampleResumeData}
+                  styleConfig={{
+                    fontSize: 13,
+                    nameFontSize: 26,
+                    sectionTitleFontSize: 14,
+                    accentTone: previewAccent,
+                    spacing: "normal",
+                    showSectionDividers: true,
+                  }}
+                  accentColors={previewColors}
+                />
+              </div>
             </div>
           </div>
         </div>

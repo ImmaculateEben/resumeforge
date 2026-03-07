@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 export default function SettingsPage() {
-  const { data: session } = useSession();
+  const session = useSession()?.data;
 
   if (!session?.user) {
     return (

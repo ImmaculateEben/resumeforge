@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useState } from "react";
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
+  const session = useSession()?.data;
   const [activeFilter, setActiveFilter] = useState("active");
 
   if (!session?.user) {

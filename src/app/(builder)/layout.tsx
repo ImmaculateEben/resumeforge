@@ -11,7 +11,7 @@ export default function BuilderLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const session = useSession()?.data;
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
 
   const isAuthenticated = !!session?.user;

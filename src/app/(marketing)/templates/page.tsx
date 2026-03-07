@@ -165,7 +165,9 @@ export default function TemplatesPage() {
                       <TemplateCard
                         data={sampleResumeData}
                         styleConfig={{
-                          fontScale: "compact",
+                          fontSize: 11,
+                          nameFontSize: 24,
+                          sectionTitleFontSize: 13,
                           accentTone: "slate",
                           spacing: "tight",
                           showSectionDividers: true,
@@ -282,7 +284,9 @@ export default function TemplatesPage() {
               <PreviewComponent
                 data={sampleResumeData}
                 styleConfig={{
-                  fontScale: "comfortable",
+                  fontSize: 13,
+                  nameFontSize: 26,
+                  sectionTitleFontSize: 14,
                   accentTone: previewAccent,
                   spacing: "normal",
                   showSectionDividers: true,

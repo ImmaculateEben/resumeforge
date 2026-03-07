@@ -90,7 +90,9 @@ const customSectionSchema = z.object({
 });
 
 const styleConfigSchema = z.object({
-  fontScale: z.enum(["compact", "comfortable"]),
+  fontSize: z.number().min(8).max(16).default(13),
+  nameFontSize: z.number().min(18).max(36).default(26),
+  sectionTitleFontSize: z.number().min(10).max(18).default(14),
   accentTone: z.enum(["slate", "ocean", "forest", "charcoal", "violet", "rose"]),
   spacing: z.enum(["tight", "normal"]),
   showSectionDividers: z.boolean(),

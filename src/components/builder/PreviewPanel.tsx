@@ -1,34 +1,47 @@
 "use client";
 
-import { useMemo, useEffect, useState, useCallback, type RefObject } from "react";
+import { useMemo, useEffect, useState, useCallback, useRef, type RefObject } from "react";
 import type { useResume } from "@/hooks/use-resume";
 import type { ResumeData } from "@/components/templates/types";
+import { paperSizeMap } from "@/components/templates/types";
 import { renderTemplate, accentColorMap, sampleResumeData } from "@/components/templates";
+import { printResumeDocument } from "@/lib/print";
 
 interface PreviewPanelProps {
   resume: ReturnType<typeof useResume>;
   previewRef: RefObject<HTMLDivElement | null>;
 }
 
-const A4_WIDTH_PX = 794; // 210mm in px at 96dpi
+// Padding: 12mm top/bottom, 15mm left/right (converted to px at 96dpi)
+const PAD_X_PX = 56.7; // 15mm
+const PAD_Y_PX = 45.4; // 12mm
 
 export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
   const [scale, setScale] = useState(1);
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
+  const [pageCount, setPageCount] = useState(1);
+  const contentMeasureRef = useRef<HTMLDivElement | null>(null);
+
+  const paperSize = resume.styleConfig.paperSize || "a4";
+  const paper = paperSizeMap[paperSize] || paperSizeMap.a4;
+  const pageWidthPx = paper.widthPx;
+  const pageHeightPx = paper.heightPx;
+  const contentWidthPx = pageWidthPx - PAD_X_PX * 2;
+  const contentHeightPerPage = pageHeightPx - PAD_Y_PX * 2;
 
   const measuredRef = useCallback((node: HTMLDivElement | null) => {
     setContainerRef(node);
   }, []);
 
+  // Scale to fit container width
   useEffect(() => {
     if (!containerRef) return;
 
     const updateScale = () => {
       const containerWidth = containerRef.clientWidth;
-      // Subtract padding (16px each side on mobile, 24px on sm, 32px on lg)
       const availableWidth = containerWidth - 32;
-      if (availableWidth < A4_WIDTH_PX) {
-        setScale(availableWidth / A4_WIDTH_PX);
+      if (availableWidth < pageWidthPx) {
+        setScale(availableWidth / pageWidthPx);
       } else {
         setScale(1);
       }
@@ -39,7 +52,26 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
     const ro = new ResizeObserver(updateScale);
     ro.observe(containerRef);
     return () => ro.disconnect();
-  }, [containerRef]);
+  }, [containerRef, pageWidthPx]);
+
+  // Measure content height to determine page count
+  useEffect(() => {
+    if (!contentMeasureRef.current) return;
+
+    const measure = () => {
+      const el = contentMeasureRef.current;
+      if (!el) return;
+      const contentHeight = el.scrollHeight;
+      const pages = Math.max(1, Math.ceil(contentHeight / contentHeightPerPage));
+      setPageCount(pages);
+    };
+
+    measure();
+
+    const ro = new ResizeObserver(measure);
+    ro.observe(contentMeasureRef.current);
+    return () => ro.disconnect();
+  }, [contentHeightPerPage, resume.data, resume.styleConfig, resume.templateKey, resume.documentType, resume.sectionOrder, resume.sectionTitles]);
 
   const accentColors = useMemo(
     () => accentColorMap[resume.styleConfig.accentTone] || accentColorMap.slate,
@@ -77,24 +109,42 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
   }, [resume.data]);
 
   const needsScale = scale < 1;
+  const previewHeightPx = Math.max(pageHeightPx, pageCount * pageHeightPx);
+
+  const templateContent = renderTemplate(resume.templateKey, {
+    data: previewData,
+    styleConfig: resume.styleConfig,
+    accentColors,
+    documentType: resume.documentType,
+    sectionOrder: resume.sectionOrder,
+    sectionTitles: resume.sectionTitles,
+  });
+
+  const handlePrint = useCallback(() => {
+    printResumeDocument(paperSize);
+  }, [paperSize]);
 
   return (
     <div ref={measuredRef} className="p-4 sm:p-6 lg:p-8 min-h-full flex flex-col items-center">
       {/* Preview Header */}
-      <div className="w-full max-w-[210mm] flex items-center justify-between mb-3 sm:mb-4 print:hidden">
+      <div className="w-full flex items-center justify-between mb-3 sm:mb-4 print:hidden" style={{ maxWidth: `${paper.widthMm}mm` }}>
         <div className="flex items-center gap-2">
           <span className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
             Live Preview
           </span>
           <span className="text-xs text-gray-400 hidden sm:inline">&bull;</span>
           <span className="text-[10px] sm:text-xs text-gray-400 capitalize hidden sm:inline">{resume.templateKey}</span>
+          <span className="text-xs text-gray-400 hidden sm:inline">&bull;</span>
+          <span className="text-[10px] sm:text-xs text-gray-400 hidden sm:inline">
+            {pageCount} {pageCount === 1 ? "page" : "pages"}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           {needsScale && (
             <span className="text-[10px] text-gray-400">{Math.round(scale * 100)}%</span>
           )}
           <button
-            onClick={() => window.print()}
+            onClick={handlePrint}
             className="btn-ghost text-xs px-2 sm:px-3 py-1.5"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -105,31 +155,52 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
         </div>
       </div>
 
-      {/* A4 Preview - scaled wrapper */}
+      {/* Multi-page preview with visual page breaks */}
       <div
-        className="w-full flex justify-center"
+        className="w-full flex flex-col items-center gap-6 print:gap-0"
         style={needsScale ? {
-          height: `calc(297mm * ${scale})`,
-          overflow: "hidden",
+          transformOrigin: "top center",
+          transform: `scale(${scale})`,
+          width: `${100 / scale}%`,
+          marginBottom: `-${(1 - scale) * pageCount * pageHeightPx}px`,
         } : undefined}
       >
         <div
           ref={previewRef}
-          className="print-area bg-white shadow-xl rounded-sm min-h-[297mm] p-10 sm:p-12 relative"
+          className="print-area bg-white shadow-xl rounded-sm relative"
+          data-paper-size={paperSize}
           style={{
-            width: `${A4_WIDTH_PX}px`,
-            transformOrigin: "top center",
-            transform: needsScale ? `scale(${scale})` : undefined,
+            width: `${pageWidthPx}px`,
+            minHeight: `${previewHeightPx}px`,
           }}
         >
-          {renderTemplate(resume.templateKey, {
-            data: previewData,
-            styleConfig: resume.styleConfig,
-            accentColors,
-            documentType: resume.documentType,
-            sectionOrder: resume.sectionOrder,
-            sectionTitles: resume.sectionTitles,
-          })}
+          {/* Visible page boundary lines in preview */}
+          {pageCount > 1 && Array.from({ length: pageCount - 1 }, (_, i) => (
+            <div
+              key={i}
+              className="absolute left-0 right-0 print:hidden pointer-events-none"
+              style={{ top: `${(i + 1) * pageHeightPx}px` }}
+            >
+              <div className="border-t-2 border-dashed border-blue-300/60 mx-4" />
+              <div className="flex justify-center -mt-2.5">
+                <span className="bg-blue-50 text-blue-400 text-[9px] px-2 py-0.5 rounded-full font-medium">
+                  Page {i + 2}
+                </span>
+              </div>
+            </div>
+          ))}
+
+          {/* Actual rendered content - measured for page count */}
+          <div
+            ref={contentMeasureRef}
+            className="print-document-content"
+            style={{
+              width: `${contentWidthPx}px`,
+              margin: `${PAD_Y_PX}px auto`,
+            }}
+          >
+            {templateContent}
+          </div>
         </div>
       </div>
     </div>

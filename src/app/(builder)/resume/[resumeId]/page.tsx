@@ -7,6 +7,7 @@ import { useResume, registrySectionOrder } from "@/hooks/use-resume";
 import { EditorSidebar } from "@/components/builder/EditorSidebar";
 import { PreviewPanel } from "@/components/builder/PreviewPanel";
 import { MobileTabBar } from "@/components/builder/MobileTabBar";
+import { printResumeDocument } from "@/lib/print";
 
 type MobileTab = "edit" | "preview";
 
@@ -63,7 +64,7 @@ export default function ResumeEditorPage({ params }: { params: Promise<{ resumeI
       {/* Mobile Action Bar */}
       <div className="lg:hidden border-t border-gray-200 bg-white px-4 py-3 flex gap-2 print:hidden">
         <button
-          onClick={() => window.print()}
+          onClick={() => printResumeDocument(resume.styleConfig.paperSize)}
           className="btn-secondary flex-1 text-xs py-2.5 justify-center"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

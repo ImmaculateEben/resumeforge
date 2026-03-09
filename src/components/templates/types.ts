@@ -139,6 +139,27 @@ export interface CustomSectionEntry {
   bullets: string[];
 }
 
+export type PaperSize = "a4" | "letter" | "legal";
+
+export interface PaperDimensions {
+  /** Width in mm */
+  widthMm: number;
+  /** Height in mm */
+  heightMm: number;
+  /** Width in px at 96dpi */
+  widthPx: number;
+  /** Height in px at 96dpi */
+  heightPx: number;
+  /** CSS @page size value */
+  cssSize: string;
+}
+
+export const paperSizeMap: Record<PaperSize, PaperDimensions> = {
+  a4: { widthMm: 210, heightMm: 297, widthPx: 794, heightPx: 1123, cssSize: "A4" },
+  letter: { widthMm: 215.9, heightMm: 279.4, widthPx: 816, heightPx: 1056, cssSize: "letter" },
+  legal: { widthMm: 215.9, heightMm: 355.6, widthPx: 816, heightPx: 1344, cssSize: "legal" },
+};
+
 export interface StyleConfig {
   fontSize: number;
   nameFontSize: number;
@@ -146,6 +167,7 @@ export interface StyleConfig {
   accentTone: string;
   spacing: "tight" | "normal";
   showSectionDividers: boolean;
+  paperSize: PaperSize;
 }
 
 /** User-overridden section titles */

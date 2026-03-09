@@ -29,6 +29,7 @@ const defaultStyleConfig: StyleConfig = {
   accentTone: "slate",
   spacing: "normal",
   showSectionDividers: true,
+  paperSize: "a4",
 };
 
 export const defaultSectionOrder: SectionOrder[] = [
@@ -153,6 +154,7 @@ function normalizeStyleConfig(styleConfig?: Partial<StyleConfig> & { fontScale?:
     accentTone: styleConfig?.accentTone || "slate",
     spacing: styleConfig?.spacing || "normal",
     showSectionDividers: styleConfig?.showSectionDividers ?? true,
+    paperSize: styleConfig?.paperSize || "a4",
   } satisfies StyleConfig;
 }
 

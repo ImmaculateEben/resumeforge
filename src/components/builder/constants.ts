@@ -35,6 +35,12 @@ export const sectionLabels: Record<SectionKey, string> = {
 
 export const cvOnlySections: SectionKey[] = ["personalDetails", "hobbies", "referees"];
 
+export const paperSizeOptions: { value: string; label: string; dimensions: string }[] = [
+  { value: "a4", label: "A4", dimensions: "210 × 297 mm" },
+  { value: "letter", label: "US Letter", dimensions: "215.9 × 279.4 mm" },
+  { value: "legal", label: "US Legal", dimensions: "215.9 × 355.6 mm" },
+];
+
 export const entryStyleOptions: { value: CustomEntryStyle; label: string; desc: string }[] = [
   { value: "standard", label: "Standard", desc: "Heading, subheading, date, bullets" },
   { value: "compact", label: "Compact", desc: "Single line - heading + date" },

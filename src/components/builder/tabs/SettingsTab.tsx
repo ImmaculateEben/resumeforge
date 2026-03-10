@@ -7,7 +7,6 @@ import { MoveButton } from "../shared/MoveButton";
 
 interface SettingsTabProps {
   documentType: "resume" | "cv";
-  setDocumentType: (type: "resume" | "cv") => void;
   sectionOrder: SectionOrder[];
   moveSection: (key: SectionKey, direction: "up" | "down") => void;
   toggleSectionVisibility: (key: SectionKey) => void;
@@ -21,7 +20,7 @@ interface SettingsTabProps {
 }
 
 export function SettingsTab({
-  documentType, setDocumentType, sectionOrder, moveSection,
+  documentType, sectionOrder, moveSection,
   toggleSectionVisibility, sectionTitles, updateSectionTitle,
   exportJSON, importJSON, clearAll, customSections, updateCustomSection,
 }: SettingsTabProps) {
@@ -49,41 +48,6 @@ export function SettingsTab({
 
   return (
     <div className="space-y-6">
-      {/* Document Type */}
-      <section>
-        <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-semibold text-gray-900">Document Type</h2>
-          <div className="flex-1 h-px bg-gray-100" />
-        </div>
-        <div className="flex rounded-xl border border-gray-200 overflow-hidden">
-          <button
-            onClick={() => setDocumentType("resume")}
-            className={`flex-1 py-2.5 text-sm font-medium transition-all ${
-              documentType === "resume"
-                ? "bg-primary/10 text-primary"
-                : "text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            Resume
-          </button>
-          <button
-            onClick={() => setDocumentType("cv")}
-            className={`flex-1 py-2.5 text-sm font-medium transition-all border-l border-gray-200 ${
-              documentType === "cv"
-                ? "bg-primary/10 text-primary"
-                : "text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            CV
-          </button>
-        </div>
-        <p className="text-xs text-gray-400 mt-1.5">
-          {documentType === "resume"
-            ? "Concise format, typically 1-2 pages"
-            : "Comprehensive format with personal details, hobbies, and references"}
-        </p>
-      </section>
-
       {/* Section Order */}
       <section>
         <div className="flex items-center gap-2 mb-3">

@@ -39,7 +39,7 @@ export function NorthstarTemplate({
         if (!data.summary) return null;
         return (
           <NSection key="summary" title={titles.summary || "About"} accent={accentColors} gap={gap} dividers={styleConfig.showSectionDividers} stfs={stfs}>
-            <p style={{ color: "#374151", margin: 0, borderLeft: `3px solid ${accentColors.primary}33`, paddingLeft: 12, fontStyle: "italic" }}>{data.summary}</p>
+            <p style={{ color: "#374151", margin: 0, fontStyle: "italic" }}>{data.summary}</p>
           </NSection>
         );
 
@@ -145,6 +145,7 @@ export function NorthstarTemplate({
                   {project.name}
                   {project.role && <span style={{ fontWeight: 400, color: "#6b7280" }}> - {project.role}</span>}
                 </h3>
+                {project.description && <p style={{ color: "#374151", margin: "2px 0 0" }}>{project.description}</p>}
                 {project.url && <p style={{ color: accentColors.primary, fontSize: fs * 0.82, margin: "1px 0 0" }}>{project.url}</p>}
                 {project.bullets.length > 0 && (
                   <ul style={{ margin: "4px 0 0", paddingLeft: 18, color: "#374151" }}>

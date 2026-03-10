@@ -174,10 +174,10 @@ export function SummitTemplate({
         return (
           <CSection key="experience" title={titles.experience || "Experience"} accent={accentColors} gap={gap} dividers={styleConfig.showSectionDividers} stfs={stfs}>
             {data.experience.map((exp, index) => (
-              <div key={exp.id} style={{ marginBottom: index < data.experience.length - 1 ? gap : 0, position: "relative", paddingLeft: 14 }}>
-                <div style={{ position: "absolute", left: 0, top: 6, width: 6, height: 6, borderRadius: "50%", background: accentColors.primary }} />
+              <div key={exp.id} style={{ marginBottom: index < data.experience.length - 1 ? gap : 0, position: "relative" }}>
+                <div style={{ position: "absolute", left: -14, top: 6, width: 6, height: 6, borderRadius: "50%", background: accentColors.primary }} />
                 {index < data.experience.length - 1 && (
-                  <div style={{ position: "absolute", left: 2.5, top: 14, width: 1, bottom: -gap + 2, background: accentColors.light }} />
+                  <div style={{ position: "absolute", left: -11.5, top: 14, width: 1, bottom: -gap + 2, background: accentColors.light }} />
                 )}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap" }}>
                   <h3 style={{ fontWeight: 600, color: "#111827", margin: 0, fontSize: fs * 1.05 }}>{exp.position}</h3>
@@ -242,6 +242,7 @@ export function SummitTemplate({
                   {project.name}
                   {project.role && <span style={{ fontWeight: 400, color: "#6b7280" }}> - {project.role}</span>}
                 </h3>
+                {project.description && <p style={{ color: "#4b5563", margin: "2px 0 0" }}>{project.description}</p>}
                 {project.url && <p style={{ color: accentColors.primary, fontSize: fs * 0.82, margin: "1px 0 0" }}>{project.url}</p>}
                 {project.bullets.length > 0 && (
                   <ul style={{ margin: "3px 0 0", paddingLeft: 16, color: "#374151" }}>

@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import type { SkillGroup } from "@/components/templates/types";
+import type { ResumeAiContext } from "@/modules/validation";
 import { SectionCollapsible } from "../shared/SectionCollapsible";
 import { EmptyState } from "../shared/EmptyState";
 import { RemoveButton } from "../shared/RemoveButton";
+import { InlineAiAssist } from "../shared/InlineAiAssist";
 
 interface SkillsSectionProps {
   skills: SkillGroup[];
+  resume: ResumeAiContext;
   addSkillGroup: () => string;
   updateSkillGroup: (id: string, updates: Partial<SkillGroup>) => void;
   removeSkillGroup: (id: string) => void;
@@ -18,7 +21,7 @@ interface SkillsSectionProps {
 }
 
 export function SkillsSection({
-  skills, addSkillGroup, updateSkillGroup, removeSkillGroup,
+  skills, resume, addSkillGroup, updateSkillGroup, removeSkillGroup,
   addSkillItem, removeSkillItem, open, onToggle,
 }: SkillsSectionProps) {
   const [skillInput, setSkillInput] = useState<Record<string, string>>({});
@@ -56,6 +59,23 @@ export function SkillsSection({
                 className="input-modern"
                 value={group.category || ""}
                 onChange={(e) => updateSkillGroup(group.id, { category: e.target.value })}
+              />
+              <InlineAiAssist
+                target="skills_group"
+                resume={resume}
+                entityId={group.id}
+                labels={{
+                  generate: "AI suggest skills",
+                  improve: "AI improve skills",
+                  tailor: "Tailor skills",
+                  apply: group.items.length > 0 ? "Replace skills" : "Use skills",
+                }}
+                helpText="Suggests relevant skills from this category plus your broader resume context."
+                onApply={(result) => {
+                  if (result.kind === "list") {
+                    updateSkillGroup(group.id, { items: result.items.slice(0, 20) });
+                  }
+                }}
               />
               <div className="flex flex-wrap gap-1.5">
                 {group.items.map((item, i) => (

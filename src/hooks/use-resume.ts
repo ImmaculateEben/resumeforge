@@ -128,7 +128,11 @@ function normalizeResumeData(data?: Partial<ResumeData>): ResumeData {
     personalDetails: normalizePersonalDetails(data?.personalDetails),
     experience: data?.experience || [],
     education: data?.education || [],
-    projects: data?.projects || [],
+    projects: (data?.projects || []).map((project) => ({
+      ...project,
+      description: project.description || "",
+      bullets: project.bullets || [],
+    })),
     skills: data?.skills || [],
     certifications: data?.certifications || [],
     links: data?.links || [],
@@ -403,7 +407,7 @@ export function useResume(storageKey = STORAGE_KEY, initOptions: ResumeInitOptio
     const id = genId();
     setData((prev) => ({
       ...prev,
-      projects: [...prev.projects, { id, name: "", bullets: [] }],
+      projects: [...prev.projects, { id, name: "", description: "", bullets: [] }],
     }));
     return id;
   }, []);

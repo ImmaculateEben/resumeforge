@@ -28,6 +28,7 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
   const pageHeightPx = paper.heightPx;
   const contentWidthPx = pageWidthPx - PAD_X_PX * 2;
   const contentHeightPerPage = pageHeightPx - PAD_Y_PX * 2;
+  const pageGapPx = 24;
 
   const measuredRef = useCallback((node: HTMLDivElement | null) => {
     setContainerRef(node);
@@ -110,22 +111,38 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
 
   const needsScale = scale < 1;
   const previewHeightPx = Math.max(pageHeightPx, pageCount * pageHeightPx);
+  const previewStackHeightPx = previewHeightPx + Math.max(0, pageCount - 1) * pageGapPx;
 
-  const templateContent = renderTemplate(resume.templateKey, {
-    data: previewData,
-    styleConfig: resume.styleConfig,
-    accentColors,
-    documentType: resume.documentType,
-    sectionOrder: resume.sectionOrder,
-    sectionTitles: resume.sectionTitles,
-  });
+  const templateProps = useMemo(
+    () => ({
+      data: previewData,
+      styleConfig: resume.styleConfig,
+      accentColors,
+      documentType: resume.documentType,
+      sectionOrder: resume.sectionOrder,
+      sectionTitles: resume.sectionTitles,
+    }),
+    [
+      accentColors,
+      previewData,
+      resume.documentType,
+      resume.sectionOrder,
+      resume.sectionTitles,
+      resume.styleConfig,
+    ]
+  );
+
+  const renderDocumentContent = useCallback(
+    () => renderTemplate(resume.templateKey, templateProps),
+    [resume.templateKey, templateProps]
+  );
 
   const handlePrint = useCallback(() => {
     printResumeDocument(paperSize);
   }, [paperSize]);
 
   return (
-    <div ref={measuredRef} className="p-4 sm:p-6 lg:p-8 min-h-full flex flex-col items-center">
+    <div ref={measuredRef} className="relative p-4 sm:p-6 lg:p-8 min-h-full flex flex-col items-center">
       {/* Preview Header */}
       <div className="w-full flex items-center justify-between mb-3 sm:mb-4 print:hidden" style={{ maxWidth: `${paper.widthMm}mm` }}>
         <div className="flex items-center gap-2">
@@ -155,51 +172,97 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
         </div>
       </div>
 
-      {/* Multi-page preview with visual page breaks */}
+      {/* Hidden measuring layer for pagination */}
       <div
-        className="w-full flex flex-col items-center gap-6 print:gap-0"
+        aria-hidden="true"
+        className="absolute left-0 top-0 h-0 w-full overflow-hidden pointer-events-none opacity-0"
+        style={{
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          ref={contentMeasureRef}
+          className="print-document-content"
+          style={{
+            width: `${contentWidthPx}px`,
+            margin: `${PAD_Y_PX}px auto`,
+          }}
+        >
+          {renderDocumentContent()}
+        </div>
+      </div>
+
+      {/* Screen preview as stacked pages */}
+      <div
+        aria-hidden="true"
+        className="w-full flex justify-center print:hidden"
         style={needsScale ? {
           transformOrigin: "top center",
           transform: `scale(${scale})`,
           width: `${100 / scale}%`,
-          marginBottom: `-${(1 - scale) * pageCount * pageHeightPx}px`,
+          marginBottom: `-${(1 - scale) * previewStackHeightPx}px`,
         } : undefined}
       >
         <div
+          className="relative"
+          style={{
+            width: `${pageWidthPx}px`,
+            height: `${previewStackHeightPx}px`,
+          }}
+        >
+          {Array.from({ length: pageCount }, (_, i) => (
+            <div
+              key={i}
+              className="absolute left-0 overflow-hidden rounded-sm bg-white shadow-xl ring-1 ring-black/5"
+              style={{
+                top: `${i * (pageHeightPx + pageGapPx)}px`,
+                width: `${pageWidthPx}px`,
+                height: `${pageHeightPx}px`,
+              }}
+            >
+              <div
+                className="absolute left-0 top-0"
+                style={{
+                  width: `${pageWidthPx}px`,
+                  minHeight: `${previewHeightPx}px`,
+                  transform: `translateY(-${i * pageHeightPx}px)`,
+                }}
+              >
+                <div
+                  className="print-document-content"
+                  style={{
+                    width: `${contentWidthPx}px`,
+                    margin: `${PAD_Y_PX}px auto`,
+                  }}
+                >
+                  {renderDocumentContent()}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Print-only document */}
+      <div className="hidden print:block">
+        <div
           ref={previewRef}
-          className="print-area bg-white shadow-xl rounded-sm relative"
+          className="print-area bg-white relative"
           data-paper-size={paperSize}
           style={{
             width: `${pageWidthPx}px`,
             minHeight: `${previewHeightPx}px`,
           }}
         >
-          {/* Visible page boundary lines in preview */}
-          {pageCount > 1 && Array.from({ length: pageCount - 1 }, (_, i) => (
-            <div
-              key={i}
-              className="absolute left-0 right-0 print:hidden pointer-events-none"
-              style={{ top: `${(i + 1) * pageHeightPx}px` }}
-            >
-              <div className="border-t-2 border-dashed border-blue-300/60 mx-4" />
-              <div className="flex justify-center -mt-2.5">
-                <span className="bg-blue-50 text-blue-400 text-[9px] px-2 py-0.5 rounded-full font-medium">
-                  Page {i + 2}
-                </span>
-              </div>
-            </div>
-          ))}
-
-          {/* Actual rendered content - measured for page count */}
           <div
-            ref={contentMeasureRef}
             className="print-document-content"
             style={{
               width: `${contentWidthPx}px`,
               margin: `${PAD_Y_PX}px auto`,
             }}
           >
-            {templateContent}
+            {renderDocumentContent()}
           </div>
         </div>
       </div>

@@ -1,17 +1,52 @@
 "use client";
 
+import type { InlineAiTarget, ResumeAiContext } from "@/modules/validation";
+import { InlineAiAssist } from "./InlineAiAssist";
+
+type BulletAiTarget = Extract<
+  InlineAiTarget,
+  "experience_bullets" | "education_bullets" | "project_bullets" | "custom_entry_bullets"
+>;
+
 interface BulletListProps {
   bullets: string[];
   onAdd: () => void;
   onUpdate: (index: number, text: string) => void;
   onRemove: (index: number) => void;
   max: number;
+  aiAssist?: {
+    target: BulletAiTarget;
+    resume: ResumeAiContext;
+    entityId: string;
+    onApply: (bullets: string[]) => void;
+  };
 }
 
-export function BulletList({ bullets, onAdd, onUpdate, onRemove, max }: BulletListProps) {
+export function BulletList({ bullets, onAdd, onUpdate, onRemove, max, aiAssist }: BulletListProps) {
+  const hasBullets = bullets.some((bullet) => bullet.trim().length > 0);
+
   return (
     <div className="space-y-1.5">
       <label className="text-xs font-medium text-gray-500">Key Achievements / Details</label>
+      {aiAssist && (
+        <InlineAiAssist
+          target={aiAssist.target}
+          resume={aiAssist.resume}
+          entityId={aiAssist.entityId}
+          labels={{
+            generate: "AI draft bullets",
+            improve: "AI improve bullets",
+            tailor: "Tailor bullets",
+            apply: hasBullets ? "Replace bullets" : "Use bullets",
+          }}
+          helpText="Generates concise bullet points from this entry and the rest of your resume."
+          onApply={(result) => {
+            if (result.kind === "list") {
+              aiAssist.onApply(result.items.slice(0, max));
+            }
+          }}
+        />
+      )}
       {bullets.map((bullet, i) => (
         <div key={i} className="flex gap-2 items-start">
           <span className="text-gray-300 mt-2.5 text-xs select-none">&bull;</span>

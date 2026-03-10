@@ -78,6 +78,7 @@ const projectItemSchema = z.object({
   id: z.string(),
   name: plainText(120),
   role: plainText(120).optional(),
+  description: plainText(300).optional(),
   url: z.string().trim().url().optional().or(z.literal("")),
   startDate: plainText(20).optional(),
   endDate: plainText(20).optional(),

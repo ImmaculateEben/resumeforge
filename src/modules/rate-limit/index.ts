@@ -31,6 +31,18 @@ export const authenticatedRateLimit = new Ratelimit({
   prefix: "ratelimit:authenticated",
 });
 
+export const guestAiAssistRateLimit = new Ratelimit({
+  redis: getRedis(),
+  limiter: Ratelimit.slidingWindow(12, "10 m"),
+  prefix: "ratelimit:guest-ai-assist",
+});
+
+export const authenticatedAiAssistRateLimit = new Ratelimit({
+  redis: getRedis(),
+  limiter: Ratelimit.slidingWindow(40, "10 m"),
+  prefix: "ratelimit:authenticated-ai-assist",
+});
+
 export function getIpFromRequest(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {

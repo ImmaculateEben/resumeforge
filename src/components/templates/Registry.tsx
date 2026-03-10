@@ -155,6 +155,7 @@ export function RegistryTemplate({
                     </span>
                   )}
                 </div>
+                {project.description && <p style={{ margin: "1px 0 0", color: "#4b5563" }}>{project.description}</p>}
                 {project.url && <p style={{ margin: "1px 0 0", color: accentColors.primary }}>{project.url}</p>}
                 {project.bullets.length > 0 && (
                   <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>

@@ -77,7 +77,7 @@ export function QuillTemplate({
                 {exp.bullets.length > 0 && (
                   <ul style={{ margin: "6px 0 0", paddingLeft: 16, color: "#4b5563" }}>
                     {exp.bullets.filter(Boolean).map((bullet, bulletIndex) => (
-                      <li key={bulletIndex} style={{ marginBottom: 2, paddingLeft: 4 }}>
+                      <li key={bulletIndex} style={{ marginBottom: 2 }}>
                         {bullet}
                       </li>
                     ))}
@@ -107,7 +107,7 @@ export function QuillTemplate({
                 {edu.bullets.length > 0 && (
                   <ul style={{ margin: "4px 0 0", paddingLeft: 16, color: "#4b5563" }}>
                     {edu.bullets.filter(Boolean).map((bullet, bulletIndex) => (
-                      <li key={bulletIndex} style={{ paddingLeft: 4 }}>
+                      <li key={bulletIndex}>
                         {bullet}
                       </li>
                     ))}
@@ -143,11 +143,12 @@ export function QuillTemplate({
                   {project.name}
                   {project.role && <span style={{ fontWeight: 400, color: "#6b7280" }}> - {project.role}</span>}
                 </h3>
+                {project.description && <p style={{ color: "#4b5563", margin: "2px 0 0", fontStyle: "italic" }}>{project.description}</p>}
                 {project.url && <p style={{ color: accentColors.primary, fontSize: fs * 0.82, margin: "1px 0 0" }}>{project.url}</p>}
                 {project.bullets.length > 0 && (
                   <ul style={{ margin: "4px 0 0", paddingLeft: 16, color: "#4b5563" }}>
                     {project.bullets.filter(Boolean).map((bullet, bulletIndex) => (
-                      <li key={bulletIndex} style={{ paddingLeft: 4 }}>
+                      <li key={bulletIndex}>
                         {bullet}
                       </li>
                     ))}
@@ -193,7 +194,7 @@ export function QuillTemplate({
           <QSection key="hobbies" title={titles.hobbies || "Hobbies"} accent={accentColors} gap={gap} dividers={styleConfig.showSectionDividers} stfs={stfs}>
             <ul style={{ margin: 0, paddingLeft: 16, color: "#4b5563" }}>
               {hobbies.map((hobby) => (
-                <li key={hobby} style={{ paddingLeft: 4, marginBottom: 2 }}>
+                <li key={hobby} style={{ marginBottom: 2 }}>
                   {hobby}
                 </li>
               ))}
@@ -297,7 +298,7 @@ function CustomEntries({
       return (
         <ul style={{ margin: 0, paddingLeft: 16, color: "#4b5563" }}>
           {section.entries.map((entry) => (
-            <li key={entry.id} style={{ paddingLeft: 4, marginBottom: 2 }}>
+            <li key={entry.id} style={{ marginBottom: 2 }}>
               {entry.heading}
             </li>
           ))}
@@ -343,7 +344,7 @@ function CustomEntries({
               {entry.bullets.length > 0 && (
                 <ul style={{ margin: "4px 0 0", paddingLeft: 16, color: "#4b5563" }}>
                   {entry.bullets.filter(Boolean).map((bullet, bulletIndex) => (
-                    <li key={bulletIndex} style={{ paddingLeft: 4 }}>
+                    <li key={bulletIndex}>
                       {bullet}
                     </li>
                   ))}

@@ -197,6 +197,7 @@ export function AtlasTemplate({
                     </span>
                   )}
                 </div>
+                {project.description && <p style={{ color: "#4b5563", margin: "2px 0 0" }}>{project.description}</p>}
                 {project.url && <p style={{ color: accentColors.primary, fontSize: fs * 0.85, margin: "1px 0 0" }}>{project.url}</p>}
                 {project.bullets.length > 0 && (
                   <ul style={{ margin: "4px 0 0", paddingLeft: 18, color: "#374151" }}>

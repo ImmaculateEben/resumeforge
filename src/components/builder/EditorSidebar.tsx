@@ -144,7 +144,6 @@ export function EditorSidebar({ resume }: EditorSidebarProps) {
         {activeTab === "settings" && (
           <SettingsTab
             documentType={resume.documentType}
-            setDocumentType={resume.setDocumentType}
             sectionOrder={resume.sectionOrder}
             moveSection={resume.moveSection}
             toggleSectionVisibility={resume.toggleSectionVisibility}

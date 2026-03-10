@@ -1,13 +1,16 @@
 "use client";
 
 import type { ProjectItem } from "@/components/templates/types";
+import type { ResumeAiContext } from "@/modules/validation";
 import { SectionCollapsible } from "../shared/SectionCollapsible";
 import { EmptyState } from "../shared/EmptyState";
 import { RemoveButton } from "../shared/RemoveButton";
 import { BulletList } from "../shared/BulletList";
+import { InlineAiAssist } from "../shared/InlineAiAssist";
 
 interface ProjectsSectionProps {
   projects: ProjectItem[];
+  resume: ResumeAiContext;
   addProject: () => string;
   updateProject: (id: string, updates: Partial<ProjectItem>) => void;
   removeProject: (id: string) => void;
@@ -19,7 +22,7 @@ interface ProjectsSectionProps {
 }
 
 export function ProjectsSection({
-  projects, addProject, updateProject, removeProject,
+  projects, resume, addProject, updateProject, removeProject,
   addBullet, updateBullet, removeBullet, open, onToggle,
 }: ProjectsSectionProps) {
   return (
@@ -41,6 +44,23 @@ export function ProjectsSection({
                 <RemoveButton onClick={() => removeProject(proj.id)} />
               </div>
               <input type="text" placeholder="Project Name" className="input-modern" value={proj.name} onChange={(e) => updateProject(proj.id, { name: e.target.value })} />
+              <InlineAiAssist
+                target="project_name"
+                resume={resume}
+                entityId={proj.id}
+                labels={{
+                  generate: "AI name project",
+                  improve: "AI improve name",
+                  tailor: "Tailor project name",
+                  apply: proj.name.trim() ? "Replace name" : "Use name",
+                }}
+                helpText="Generates a clearer project name from this project and your broader resume context."
+                onApply={(result) => {
+                  if (result.kind === "text") {
+                    updateProject(proj.id, { name: result.text });
+                  }
+                }}
+              />
               <div className="grid grid-cols-2 gap-3">
                 <input type="text" placeholder="Your Role" className="input-modern" value={proj.role || ""} onChange={(e) => updateProject(proj.id, { role: e.target.value })} />
                 <input type="text" placeholder="Project URL" className="input-modern" value={proj.url || ""} onChange={(e) => updateProject(proj.id, { url: e.target.value })} />
@@ -49,12 +69,45 @@ export function ProjectsSection({
                 <input type="text" placeholder="Start Date" className="input-modern" value={proj.startDate || ""} onChange={(e) => updateProject(proj.id, { startDate: e.target.value })} />
                 <input type="text" placeholder="End Date" className="input-modern" value={proj.endDate || ""} onChange={(e) => updateProject(proj.id, { endDate: e.target.value })} />
               </div>
+              <div className="space-y-2">
+                <textarea
+                  rows={3}
+                  placeholder="Short project description"
+                  className="input-modern resize-none text-sm"
+                  value={proj.description || ""}
+                  maxLength={300}
+                  onChange={(e) => updateProject(proj.id, { description: e.target.value })}
+                />
+                <InlineAiAssist
+                  target="project_description"
+                  resume={resume}
+                  entityId={proj.id}
+                  labels={{
+                    generate: "AI draft description",
+                    improve: "AI improve description",
+                    tailor: "Tailor description",
+                    apply: proj.description?.trim() ? "Replace description" : "Use description",
+                  }}
+                  helpText="Writes a short project description from the project details and the rest of your resume."
+                  onApply={(result) => {
+                    if (result.kind === "text") {
+                      updateProject(proj.id, { description: result.text });
+                    }
+                  }}
+                />
+              </div>
               <BulletList
                 bullets={proj.bullets}
                 onAdd={() => addBullet("projects", proj.id)}
                 onUpdate={(i, t) => updateBullet("projects", proj.id, i, t)}
                 onRemove={(i) => removeBullet("projects", proj.id, i)}
                 max={6}
+                aiAssist={{
+                  target: "project_bullets",
+                  resume,
+                  entityId: proj.id,
+                  onApply: (bullets) => updateProject(proj.id, { bullets }),
+                }}
               />
             </div>
           ))}

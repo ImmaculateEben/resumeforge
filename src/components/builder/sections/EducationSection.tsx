@@ -1,6 +1,7 @@
 "use client";
 
 import type { EducationItem } from "@/components/templates/types";
+import type { ResumeAiContext } from "@/modules/validation";
 import { SectionCollapsible } from "../shared/SectionCollapsible";
 import { EmptyState } from "../shared/EmptyState";
 import { MoveButton } from "../shared/MoveButton";
@@ -9,6 +10,7 @@ import { BulletList } from "../shared/BulletList";
 
 interface EducationSectionProps {
   education: EducationItem[];
+  resume: ResumeAiContext;
   addEducation: () => string;
   updateEducation: (id: string, updates: Partial<EducationItem>) => void;
   removeEducation: (id: string) => void;
@@ -21,7 +23,7 @@ interface EducationSectionProps {
 }
 
 export function EducationSection({
-  education, addEducation, updateEducation, removeEducation, moveEducation,
+  education, resume, addEducation, updateEducation, removeEducation, moveEducation,
   addBullet, updateBullet, removeBullet, open, onToggle,
 }: EducationSectionProps) {
   return (
@@ -62,6 +64,12 @@ export function EducationSection({
                 onUpdate={(i, t) => updateBullet("education", edu.id, i, t)}
                 onRemove={(i) => removeBullet("education", edu.id, i)}
                 max={5}
+                aiAssist={{
+                  target: "education_bullets",
+                  resume,
+                  entityId: edu.id,
+                  onApply: (bullets) => updateEducation(edu.id, { bullets }),
+                }}
               />
             </div>
           ))}

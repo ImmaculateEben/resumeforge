@@ -94,6 +94,7 @@ export interface ProjectItem {
   id: string;
   name: string;
   role?: string;
+  description?: string;
   url?: string;
   startDate?: string;
   endDate?: string;

@@ -1,6 +1,7 @@
 "use client";
 
 import type { ExperienceItem } from "@/components/templates/types";
+import type { ResumeAiContext } from "@/modules/validation";
 import { SectionCollapsible } from "../shared/SectionCollapsible";
 import { EmptyState } from "../shared/EmptyState";
 import { MoveButton } from "../shared/MoveButton";
@@ -9,6 +10,7 @@ import { BulletList } from "../shared/BulletList";
 
 interface ExperienceSectionProps {
   experience: ExperienceItem[];
+  resume: ResumeAiContext;
   addExperience: () => string;
   updateExperience: (id: string, updates: Partial<ExperienceItem>) => void;
   removeExperience: (id: string) => void;
@@ -21,7 +23,7 @@ interface ExperienceSectionProps {
 }
 
 export function ExperienceSection({
-  experience, addExperience, updateExperience, removeExperience, moveExperience,
+  experience, resume, addExperience, updateExperience, removeExperience, moveExperience,
   addBullet, updateBullet, removeBullet, open, onToggle,
 }: ExperienceSectionProps) {
   return (
@@ -68,6 +70,12 @@ export function ExperienceSection({
                 onUpdate={(i, t) => updateBullet("experience", exp.id, i, t)}
                 onRemove={(i) => removeBullet("experience", exp.id, i)}
                 max={8}
+                aiAssist={{
+                  target: "experience_bullets",
+                  resume,
+                  entityId: exp.id,
+                  onApply: (bullets) => updateExperience(exp.id, { bullets }),
+                }}
               />
             </div>
           ))}

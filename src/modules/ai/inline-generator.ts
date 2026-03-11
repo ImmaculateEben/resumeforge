@@ -9,7 +9,7 @@ import type {
   ResumeAiContext,
 } from "@/modules/validation";
 
-const DEFAULT_GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
+const DEFAULT_GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
 const groqCompletionSchema = z.object({
   text: z.string().trim().max(1200).default(""),
@@ -29,7 +29,7 @@ const groqCompletionJsonSchema = {
   required: ["text", "items"],
 } as const;
 
-class InlineAiRequestError extends Error {}
+class InlineAiRequestError extends Error { }
 
 type TargetKind = "text" | "list";
 

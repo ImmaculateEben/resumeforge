@@ -9,13 +9,7 @@ function buildPrintStyles(paperSize: PaperSize) {
   return `
     @page {
       size: ${paper.cssSize};
-      margin: ${PAGE_MARGIN_Y_MM}mm ${PAGE_MARGIN_X_MM}mm;
-      margin-top: ${PAGE_MARGIN_Y_MM}mm !important;
-      margin-bottom: ${PAGE_MARGIN_Y_MM}mm !important;
-    }
-
-    @page :first {
-      margin-top: ${PAGE_MARGIN_Y_MM}mm;
+      margin: 0;
     }
 
     html, body {
@@ -40,7 +34,9 @@ function buildPrintStyles(paperSize: PaperSize) {
       width: 100% !important;
       min-height: auto !important;
       margin: 0 !important;
-      padding: 0 !important;
+      /* Padding gives visible margin at top of page 1 and bottom of last page only.
+         With @page margin: 0, there is zero gap at page breaks (like MS Word). */
+      padding: ${PAGE_MARGIN_Y_MM}mm ${PAGE_MARGIN_X_MM}mm !important;
       box-shadow: none !important;
       border-radius: 0 !important;
       position: static !important;
@@ -115,7 +111,7 @@ export function printResumeDocument(
 
   const styleEl = document.createElement("style");
   styleEl.id = "print-page-size";
-  styleEl.textContent = `@media print { @page { size: ${(paperSizeMap[paperSize] || paperSizeMap.a4).cssSize}; margin: ${PAGE_MARGIN_Y_MM}mm ${PAGE_MARGIN_X_MM}mm; } }`;
+  styleEl.textContent = `@media print { @page { size: ${(paperSizeMap[paperSize] || paperSizeMap.a4).cssSize}; margin: 0; } }`;
 
   const existing = document.getElementById(styleEl.id);
   existing?.remove();

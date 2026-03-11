@@ -87,14 +87,14 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
       summary: d.summary && d.summary.length > 0 ? d.summary : s.summary,
       personalDetails:
         d.personalDetails &&
-        (d.personalDetails.dateOfBirth ||
-          d.personalDetails.stateOfOrigin ||
-          d.personalDetails.localGovernmentArea ||
-          d.personalDetails.sex ||
-          d.personalDetails.maritalStatus ||
-          d.personalDetails.nationality ||
-          d.personalDetails.religion ||
-          d.personalDetails.extraDetails.length > 0)
+          (d.personalDetails.dateOfBirth ||
+            d.personalDetails.stateOfOrigin ||
+            d.personalDetails.localGovernmentArea ||
+            d.personalDetails.sex ||
+            d.personalDetails.maritalStatus ||
+            d.personalDetails.nationality ||
+            d.personalDetails.religion ||
+            d.personalDetails.extraDetails.length > 0)
           ? d.personalDetails
           : s.personalDetails,
       experience: d.experience.length > 0 ? d.experience : s.experience,
@@ -252,8 +252,11 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
         </div>
       </div>
 
-      {/* Print-only document */}
-      <div className="hidden print:block">
+      {/* Print-only document — kept off-screen so it always has rendered dimensions for printFromElement() */}
+      <div
+        aria-hidden="true"
+        style={{ position: "fixed", left: "-9999px", top: 0, pointerEvents: "none", visibility: "hidden" }}
+      >
         <div
           ref={previewRef}
           className="print-area bg-white relative"

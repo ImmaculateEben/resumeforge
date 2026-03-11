@@ -10,6 +10,12 @@ function buildPrintStyles(paperSize: PaperSize) {
     @page {
       size: ${paper.cssSize};
       margin: ${PAGE_MARGIN_Y_MM}mm ${PAGE_MARGIN_X_MM}mm;
+      margin-top: ${PAGE_MARGIN_Y_MM}mm !important;
+      margin-bottom: ${PAGE_MARGIN_Y_MM}mm !important;
+    }
+
+    @page :first {
+      margin-top: ${PAGE_MARGIN_Y_MM}mm;
     }
 
     html, body {
@@ -26,6 +32,8 @@ function buildPrintStyles(paperSize: PaperSize) {
 
     .print-root {
       width: 100%;
+      margin: 0 !important;
+      padding: 0 !important;
     }
 
     .print-root .print-area {

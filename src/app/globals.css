@@ -335,6 +335,28 @@ body {
   @page {
     size: A4;
     margin: 12mm 15mm;
+    margin-top: 12mm !important;
+    margin-bottom: 12mm !important;
+  }
+
+  /* Ensure all pages have consistent margins */
+  @page :first {
+    margin-top: 12mm;
+  }
+
+  @page {
+    counter-increment: page;
+  }
+
+  /* Force margins on all pages even when content overflows */
+  .print-root {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  .print-area {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
   }
 }
 

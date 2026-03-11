@@ -249,7 +249,7 @@ export function NorthstarTemplate({
 
   return (
     <div style={{ fontSize: fs, lineHeight: 1.55, color: "#1f2937", fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <div style={{ background: `linear-gradient(135deg, ${accentColors.text}, ${accentColors.primary})`, color: "white", padding: `${gap * 1.4}px ${gap * 1.2}px`, margin: "-40px -40px 0", marginBottom: gap }}>
+      <div style={{ background: `linear-gradient(135deg, ${accentColors.text}, ${accentColors.primary})`, color: "white", padding: `${gap * 1.4}px ${gap * 1.2}px`, margin: `0 -40px ${gap}px`, marginTop: 0 }}>
         {isCV && <p style={{ fontSize: fs * 0.78, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.18em", margin: "0 0 4px", opacity: 0.75 }}>Curriculum Vitae</p>}
         <h1 style={{ fontSize: nfs, fontWeight: 800, margin: 0, letterSpacing: "-0.02em" }}>{basics.fullName || "Your Name"}</h1>
         {basics.jobTitle && <p style={{ fontSize: fs * 1.2, margin: "4px 0 0", opacity: 0.9, fontWeight: 400 }}>{basics.jobTitle}</p>}

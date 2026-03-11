@@ -1,8 +1,8 @@
 import type { PaperSize } from "@/components/templates/types";
 import { paperSizeMap } from "@/components/templates";
 
-const PAGE_MARGIN_Y_MM = 12;
-const PAGE_MARGIN_X_MM = 15;
+const PAGE_MARGIN_Y_MM = 25.4; // 1 inch
+const PAGE_MARGIN_X_MM = 25.4; // 1 inch
 
 function buildPrintStyles(paperSize: PaperSize) {
   const paper = paperSizeMap[paperSize] || paperSizeMap.a4;
@@ -46,6 +46,35 @@ function buildPrintStyles(paperSize: PaperSize) {
     .print-root .print-document-content {
       width: auto !important;
       margin: 0 !important;
+    }
+
+    /* ── Page-break rules ── */
+    /* Keep section headings glued to their first block of content.
+       If fewer than ~3 lines fit before a heading, the heading + its
+       first child will move to the next page together. */
+    .print-document-content h2 {
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+
+    /* Within each section the content can break freely between items */
+    .print-document-content h2 + * {
+      break-before: avoid;
+      page-break-before: avoid;
+    }
+
+    /* Minimum 3 lines at the bottom/top of a page for text blocks */
+    .print-document-content p,
+    .print-document-content ul,
+    .print-document-content ol {
+      orphans: 3;
+      widows: 3;
+    }
+
+    /* Individual list items should not break mid-item */
+    .print-document-content li {
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
   `;
 }

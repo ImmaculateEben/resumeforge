@@ -899,7 +899,7 @@ async function callGroq(input: InlineAiRequest, plan: GenerationPlan): Promise<I
         {
           role: "system",
           content:
-            "You generate resume-ready inline field content. Use only facts grounded in the supplied resume context. Do not invent employers, degrees, dates, metrics, skills, tools, URLs, certifications, or outcomes. Return plain text only inside the requested JSON schema.",
+            'You generate resume-ready inline field content. Use only facts grounded in the supplied resume context. Do not invent employers, degrees, dates, metrics, skills, tools, URLs, certifications, or outcomes. Return plain text only inside the requested JSON schema. You MUST respond with valid JSON only, in EXACTLY this format: {"text": "string", "items": ["string"]}. No other keys, no markdown, no explanation.',
         },
         {
           role: "user",
@@ -907,12 +907,7 @@ async function callGroq(input: InlineAiRequest, plan: GenerationPlan): Promise<I
         },
       ],
       response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "resume_inline_field_output",
-          schema: groqCompletionJsonSchema,
-          strict: true,
-        },
+        type: "json_object",
       },
     }),
   });

@@ -12,9 +12,9 @@ interface PreviewPanelProps {
   previewRef: RefObject<HTMLDivElement | null>;
 }
 
-// Padding: 12mm top/bottom, 15mm left/right (converted to px at 96dpi)
-const PAD_X_PX = 56.7; // 15mm
-const PAD_Y_PX = 45.4; // 12mm
+// Padding: 1 inch on all sides (25.4mm → 96px at 96dpi)
+const PAD_X_PX = 96; // 1 inch
+const PAD_Y_PX = 96; // 1 inch
 
 export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
   const [scale, setScale] = useState(1);

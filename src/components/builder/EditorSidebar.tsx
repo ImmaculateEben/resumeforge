@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { useResume } from "@/hooks/use-resume";
-import { printResumeDocument } from "@/lib/print";
 import type { EditorTab } from "./constants";
 import { ContentTab } from "./tabs/ContentTab";
 import { DesignTab } from "./tabs/DesignTab";
@@ -11,6 +10,7 @@ import { SettingsTab } from "./tabs/SettingsTab";
 
 interface EditorSidebarProps {
   resume: ReturnType<typeof useResume>;
+  onPrint: () => void;
 }
 
 const tabs: { key: EditorTab; label: string; icon: React.ReactNode }[] = [
@@ -43,7 +43,7 @@ const tabs: { key: EditorTab; label: string; icon: React.ReactNode }[] = [
   },
 ];
 
-export function EditorSidebar({ resume }: EditorSidebarProps) {
+export function EditorSidebar({ resume, onPrint }: EditorSidebarProps) {
   const [activeTab, setActiveTab] = useState<EditorTab>("content");
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(["personal", "summary"])
@@ -78,7 +78,7 @@ export function EditorSidebar({ resume }: EditorSidebarProps) {
             <p className="text-xs text-gray-400 mt-0.5">Auto-saved to browser</p>
           </div>
           <button
-            onClick={() => printResumeDocument(resume.styleConfig.paperSize)}
+            onClick={onPrint}
             className="btn-secondary text-xs px-2.5 py-1.5"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

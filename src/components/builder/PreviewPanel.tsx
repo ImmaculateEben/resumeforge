@@ -138,8 +138,8 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
   );
 
   const handlePrint = useCallback(() => {
-    printResumeDocument(paperSize);
-  }, [paperSize]);
+    printResumeDocument(paperSize, previewRef.current);
+  }, [paperSize, previewRef]);
 
   return (
     <div ref={measuredRef} className="relative p-4 sm:p-6 lg:p-8 min-h-full flex flex-col items-center">
@@ -186,7 +186,7 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
           className="print-document-content"
           style={{
             width: `${contentWidthPx}px`,
-            margin: `${PAD_Y_PX}px auto`,
+            margin: "0 auto",
           }}
         >
           {renderDocumentContent()}
@@ -214,7 +214,7 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
           {Array.from({ length: pageCount }, (_, i) => (
             <div
               key={i}
-              className="absolute left-0 overflow-hidden rounded-sm bg-white shadow-xl ring-1 ring-black/5"
+              className="absolute left-0 rounded-sm bg-white shadow-xl ring-1 ring-black/5"
               style={{
                 top: `${i * (pageHeightPx + pageGapPx)}px`,
                 width: `${pageWidthPx}px`,
@@ -222,21 +222,29 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
               }}
             >
               <div
-                className="absolute left-0 top-0"
+                className="absolute left-0 overflow-hidden"
                 style={{
                   width: `${pageWidthPx}px`,
-                  minHeight: `${previewHeightPx}px`,
-                  transform: `translateY(-${i * pageHeightPx}px)`,
+                  height: `${contentHeightPerPage}px`,
+                  top: `${PAD_Y_PX}px`,
                 }}
               >
                 <div
-                  className="print-document-content"
+                  className="absolute left-0 top-0"
                   style={{
-                    width: `${contentWidthPx}px`,
-                    margin: `${PAD_Y_PX}px auto`,
+                    width: `${pageWidthPx}px`,
+                    transform: `translateY(-${i * contentHeightPerPage}px)`,
                   }}
                 >
-                  {renderDocumentContent()}
+                  <div
+                    className="print-document-content"
+                    style={{
+                      width: `${contentWidthPx}px`,
+                      margin: "0 auto",
+                    }}
+                  >
+                    {renderDocumentContent()}
+                  </div>
                 </div>
               </div>
             </div>

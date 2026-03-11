@@ -1,6 +1,89 @@
+"use client";
+
+import type { FormEvent } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
+
+interface ApiErrorShape {
+  error?: {
+    message?: string;
+  };
+}
+
+function formatSignupError(error?: string | null) {
+  if (!error) {
+    return "";
+  }
+
+  switch (error) {
+    case "CredentialsSignin":
+    case "CallbackRouteError":
+      return "Your account was created, but the automatic sign-in failed. Try logging in manually.";
+    default:
+      return error;
+  }
+}
 
 export default function SignupPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName,
+          email,
+          password,
+        }),
+      });
+
+      const payload = (await response.json()) as ApiErrorShape;
+      if (!response.ok) {
+        throw new Error(payload.error?.message || "Unable to create your account right now.");
+      }
+
+      const signInResult = await signIn("credentials", {
+        email: email.trim().toLowerCase(),
+        password,
+        redirect: false,
+        callbackUrl,
+      });
+
+      if (signInResult?.error) {
+        setError(formatSignupError(signInResult.error));
+        return;
+      }
+
+      router.push(signInResult?.url || callbackUrl);
+      router.refresh();
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "Unable to create your account right now."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="animate-fade-in">
       <div className="mb-8">
@@ -12,7 +95,7 @@ export default function SignupPage() {
         </p>
       </div>
 
-      <form className="space-y-5">
+      <form className="space-y-5" onSubmit={handleSubmit}>
         <div>
           <label
             htmlFor="fullName"
@@ -27,6 +110,8 @@ export default function SignupPage() {
             required
             className="input-modern"
             placeholder="Jane Doe"
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
           />
         </div>
         <div>
@@ -43,6 +128,8 @@ export default function SignupPage() {
             required
             className="input-modern"
             placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
           />
         </div>
         <div>
@@ -60,14 +147,22 @@ export default function SignupPage() {
             minLength={8}
             className="input-modern"
             placeholder="At least 8 characters"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
           />
           <p className="mt-1.5 text-xs text-gray-400">Must be at least 8 characters long</p>
         </div>
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          {error}
+        </div>
+        )}
         <button
           type="submit"
+          disabled={isSubmitting}
           className="btn-primary w-full py-2.5 text-sm justify-center"
         >
-          Create account
+          {isSubmitting ? "Creating account..." : "Create account"}
         </button>
       </form>
 

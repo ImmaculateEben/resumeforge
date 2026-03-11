@@ -27,6 +27,9 @@ export default function ResumeEditorPage({ params }: { params: Promise<{ resumeI
   const previewRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const session = useSession()?.data;
+  const handlePrint = () => {
+    printResumeDocument(resume.styleConfig.paperSize, previewRef.current);
+  };
 
   if (!resume.loaded) {
     return (
@@ -48,7 +51,7 @@ export default function ResumeEditorPage({ params }: { params: Promise<{ resumeI
             mobileTab !== "edit" ? "hidden lg:block" : ""
           }`}
         >
-          <EditorSidebar resume={resume} />
+          <EditorSidebar resume={resume} onPrint={handlePrint} />
         </div>
 
         {/* Preview Panel */}
@@ -64,7 +67,7 @@ export default function ResumeEditorPage({ params }: { params: Promise<{ resumeI
       {/* Mobile Action Bar */}
       <div className="lg:hidden border-t border-gray-200 bg-white px-4 py-3 flex gap-2 print:hidden">
         <button
-          onClick={() => printResumeDocument(resume.styleConfig.paperSize)}
+          onClick={handlePrint}
           className="btn-secondary flex-1 text-xs py-2.5 justify-center"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

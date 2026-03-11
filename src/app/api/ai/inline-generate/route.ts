@@ -20,7 +20,8 @@ export async function POST(request: Request) {
     if (!process.env.GROQ_API_KEY) {
       return errorResponse({
         code: "INTERNAL_ERROR",
-        message: "AI assist is not configured. Add GROQ_API_KEY to enable inline generation.",
+        message:
+          "AI assist is not configured on the server. Add GROQ_API_KEY, then restart locally or redeploy on Vercel.",
         status: 503,
       });
     }

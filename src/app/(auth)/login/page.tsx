@@ -1,6 +1,61 @@
+"use client";
+
+import type { FormEvent } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
+
+function formatLoginError(error?: string | null) {
+  switch (error) {
+    case "CredentialsSignin":
+    case "CallbackRouteError":
+      return "Invalid email or password.";
+    case "AccessDenied":
+      return "Access denied for this account.";
+    case "Configuration":
+      return "Authentication is not configured correctly on the server.";
+    default:
+      return error || "";
+  }
+}
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(() => formatLoginError(searchParams.get("error")));
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const result = await signIn("credentials", {
+        email: email.trim().toLowerCase(),
+        password,
+        redirect: false,
+        callbackUrl,
+      });
+
+      if (result?.error) {
+        setError(formatLoginError(result.error));
+        return;
+      }
+
+      router.push(result?.url || callbackUrl);
+      router.refresh();
+    } catch {
+      setError("Unable to sign in right now. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="animate-fade-in">
       <div className="mb-8">
@@ -12,7 +67,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <form className="space-y-5">
+      <form className="space-y-5" onSubmit={handleSubmit}>
         <div>
           <label
             htmlFor="email"
@@ -27,6 +82,8 @@ export default function LoginPage() {
             required
             className="input-modern"
             placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
           />
         </div>
         <div>
@@ -51,13 +108,21 @@ export default function LoginPage() {
             required
             className="input-modern"
             placeholder="Enter your password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
           />
         </div>
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          {error}
+        </div>
+        )}
         <button
           type="submit"
+          disabled={isSubmitting}
           className="btn-primary w-full py-2.5 text-sm justify-center"
         >
-          Log in
+          {isSubmitting ? "Signing in..." : "Log in"}
         </button>
       </form>
 

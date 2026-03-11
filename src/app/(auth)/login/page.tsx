@@ -4,7 +4,7 @@ import type { FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 
 function formatLoginError(error?: string | null) {
   switch (error) {
@@ -20,7 +20,7 @@ function formatLoginError(error?: string | null) {
   }
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -114,8 +114,8 @@ export default function LoginPage() {
         </div>
         {error && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
-          {error}
-        </div>
+            {error}
+          </div>
         )}
         <button
           type="submit"
@@ -147,5 +147,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="animate-pulse h-96 bg-gray-50 rounded-xl" />}>
+      <LoginForm />
+    </Suspense>
   );
 }

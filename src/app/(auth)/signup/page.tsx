@@ -4,7 +4,7 @@ import type { FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 
 interface ApiErrorShape {
   error?: {
@@ -26,7 +26,7 @@ function formatSignupError(error?: string | null) {
   }
 }
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [fullName, setFullName] = useState("");
@@ -154,8 +154,8 @@ export default function SignupPage() {
         </div>
         {error && (
           <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
-          {error}
-        </div>
+            {error}
+          </div>
         )}
         <button
           type="submit"
@@ -187,5 +187,13 @@ export default function SignupPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="animate-pulse h-96 bg-gray-50 rounded-xl" />}>
+      <SignupForm />
+    </Suspense>
   );
 }

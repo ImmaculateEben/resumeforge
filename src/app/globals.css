@@ -376,32 +376,6 @@ body {
     transform: none !important;
   }
 
-  /* Prevent awkward breaks mid-element */
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    break-after: avoid;
-  }
-
-  /* Keep items together where possible */
-  .print-area div,
-  .print-area section {
-    break-inside: avoid;
-  }
-
-  /* Allow natural page breaks for long lists */
-  .print-area ul,
-  .print-area ol {
-    break-inside: auto;
-  }
-
-  .print-area li {
-    break-inside: avoid;
-  }
-
   /* Zero @page margins so there is NO gap at page breaks (like MS Word).
      Visible padding is applied via .print-root .print-area padding in print.ts. */
   @page {
@@ -409,29 +383,46 @@ body {
     margin: 0;
   }
 
-  /* Keep section headings attached to their first block of content */
-  .print-document-content h2 {
-    break-after: avoid;
-    page-break-after: avoid;
-  }
+}
 
-  .print-document-content h2+* {
-    break-before: avoid;
-    page-break-before: avoid;
-  }
+/* ─── Page-break rules (screen + print) ─────────────────────────────────────
+   Applied outside @media print so they also govern the live preview.
+   The browser uses these to avoid slicing content at page boundaries.
+   ─────────────────────────────────────────────────────────────────────────── */
 
-  /* Minimum 3 lines at top/bottom of a page for text flow */
-  .print-document-content p,
-  .print-document-content ul,
-  .print-document-content ol {
-    orphans: 3;
-    widows: 3;
-  }
+/* Keep section headings (h2) attached to first content block.
+   Keep entry headings (h3: job title, degree, project name) with their content. */
+.print-document-content h2,
+.print-document-content h3 {
+  break-after: avoid;
+  page-break-after: avoid;
+}
 
-  .print-document-content li {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
+/* The sibling immediately after h2/h3 should not start a new page alone */
+.print-document-content h2+*,
+.print-document-content h3+* {
+  break-before: avoid;
+  page-break-before: avoid;
+}
+
+/* Prevent individual paragraphs (descriptions, summaries, last sentences)
+   from being torn across a page break */
+.print-document-content p {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Allow long lists to break naturally between items but keep each item intact */
+.print-document-content ul,
+.print-document-content ol {
+  break-inside: auto;
+  orphans: 3;
+  widows: 3;
+}
+
+.print-document-content li {
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 /* Card styles */

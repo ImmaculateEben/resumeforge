@@ -57,14 +57,28 @@ function buildPrintStyles(paperSize: PaperSize) {
       page-break-after: avoid;
     }
 
+    /* Keep individual entry headings (job title, degree, project name)
+       attached to the content that immediately follows them */
+    .print-document-content h3 {
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+
     /* Within each section the content can break freely between items */
-    .print-document-content h2 + * {
+    .print-document-content h2 + *,
+    .print-document-content h3 + * {
       break-before: avoid;
       page-break-before: avoid;
     }
 
-    /* Minimum 3 lines at the bottom/top of a page for text blocks */
-    .print-document-content p,
+    /* Prevent any paragraph (summary, description, last sentence) from
+       being split across a page break */
+    .print-document-content p {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* Minimum 3 lines at the bottom/top of a page for list blocks */
     .print-document-content ul,
     .print-document-content ol {
       orphans: 3;

@@ -17,8 +17,6 @@ const PREVIEW_MARGIN_PX = 96;
 export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
   const [scale, setScale] = useState(1);
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
-  const [previewContentRef, setPreviewContentRef] = useState<HTMLDivElement | null>(null);
-  const [previewHeightPx, setPreviewHeightPx] = useState(0);
 
   const paperSize = resume.styleConfig.paperSize || "a4";
   const paper = paperSizeMap[paperSize] || paperSizeMap.a4;
@@ -49,20 +47,6 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
     ro.observe(containerRef);
     return () => ro.disconnect();
   }, [containerRef, pageWidthPx]);
-
-  useEffect(() => {
-    if (!previewContentRef) return;
-
-    const updateHeight = () => {
-      setPreviewHeightPx(Math.max(pageHeightPx, previewContentRef.scrollHeight));
-    };
-
-    updateHeight();
-
-    const ro = new ResizeObserver(updateHeight);
-    ro.observe(previewContentRef);
-    return () => ro.disconnect();
-  }, [previewContentRef, pageHeightPx]);
 
   const accentColors = useMemo(
     () => resolveAccentColors(resume.styleConfig.accentTone),
@@ -100,7 +84,7 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
   }, [resume.data]);
 
   const needsScale = scale < 1;
-  const scaledPreviewHeightPx = Math.max(pageHeightPx, previewHeightPx || pageHeightPx) * scale;
+  const scaledPreviewHeightPx = pageHeightPx * scale;
 
   const templateProps = useMemo(
     () => ({
@@ -165,20 +149,21 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
           className="overflow-hidden rounded-sm bg-white shadow-xl ring-1 ring-black/5"
           style={{
             width: `${pageWidthPx}px`,
-            minHeight: `${pageHeightPx}px`,
+            height: `${pageHeightPx}px`,
             transform: needsScale ? `scale(${scale})` : undefined,
             transformOrigin: "top center",
           }}
         >
           <div
-            ref={setPreviewContentRef}
-            className="preview-document-shell"
+            className="preview-document-shell custom-scrollbar"
             style={{
               width: "100%",
-              minHeight: `${pageHeightPx}px`,
+              height: `${pageHeightPx}px`,
               padding: `${PREVIEW_MARGIN_PX}px`,
               boxSizing: "border-box",
-              overflow: "hidden",
+              overflowX: "hidden",
+              overflowY: "auto",
+              overscrollBehavior: "contain",
             }}
           >
             <div

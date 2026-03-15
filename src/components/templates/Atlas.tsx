@@ -490,7 +490,7 @@ function AtlasSection({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ marginTop: gap }}>
+    <div data-print-section="true" style={{ marginTop: gap }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: gap * 0.5 }}>
         <div style={{ width: 3, height: 16, borderRadius: 2, background: accent.primary }} />
         <h2 style={{ fontSize: stfs, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: accent.primary, margin: 0 }}>

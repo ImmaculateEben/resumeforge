@@ -410,7 +410,7 @@ function SBSection({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ marginTop: gap * 1.1 }}>
+    <div data-print-section="true" style={{ marginTop: gap * 1.1 }}>
       <h2 style={{ fontSize: stfs * 0.85, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: accent.primary, margin: `0 0 ${gap * 0.4}px`, paddingBottom: 4, borderBottom: `2px solid ${accent.primary}33` }}>
         {title}
       </h2>
@@ -435,7 +435,7 @@ function CSection({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ marginTop: gap * 1.1 }}>
+    <div data-print-section="true" style={{ marginTop: gap * 1.1 }}>
       <h2 style={{ fontSize: stfs, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: accent.primary, margin: `0 0 ${gap * 0.5}px`, paddingBottom: 4, borderBottom: dividers ? `2px solid ${accent.primary}22` : "none" }}>
         {title}
       </h2>

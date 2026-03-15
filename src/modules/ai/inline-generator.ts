@@ -9,7 +9,12 @@ import type {
   ResumeAiContext,
 } from "@/modules/validation";
 
-const DEFAULT_GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+const DEFAULT_GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
+
+const textResultKeys = ["text", "message", "content", "summary", "description", "name", "heading", "title", "value"];
+const listResultKeys = ["items", "bullets", "skills", "points", "list", "suggestions", "entries", "keywords"];
+const envelopeKeys = ["data", "result", "response", "output", "payload"];
+const ignoredScalarKeys = new Set(["status", "kind", "mode", "tone", "target", "targetLabel"]);
 
 const groqCompletionSchema = z.object({
   text: z.string().trim().max(1200).default(""),
@@ -59,6 +64,10 @@ function clean(value?: string | null) {
   return value?.trim() || "";
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function compactList(values: Array<string | undefined>, max = values.length) {
   return values.map((value) => clean(value)).filter(Boolean).slice(0, max);
 }
@@ -80,6 +89,187 @@ function hasCurrentContent(value: string | string[]) {
   }
 
   return value.trim().length > 0;
+}
+
+function splitTextIntoItems(value: string) {
+  return value
+    .split(/\r?\n+/)
+    .map((line) => line.replace(/^\s*(?:[-*•]+|\d+[.)])\s*/, "").trim())
+    .filter(Boolean);
+}
+
+function toCleanString(value: unknown) {
+  if (typeof value === "string") {
+    return clean(value);
+  }
+
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+
+  return "";
+}
+
+function coerceListEntries(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => {
+        if (isPlainObject(entry)) {
+          for (const key of [...textResultKeys, "item", "label"]) {
+            const candidate = toCleanString(entry[key]);
+            if (candidate) {
+              return candidate;
+            }
+          }
+        }
+
+        return toCleanString(entry);
+      })
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return splitTextIntoItems(value);
+  }
+
+  return [];
+}
+
+function collectCandidateObjects(value: Record<string, unknown>) {
+  const queue: Record<string, unknown>[] = [value];
+  const seen = new Set<Record<string, unknown>>();
+  const candidates: Record<string, unknown>[] = [];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current || seen.has(current)) {
+      continue;
+    }
+
+    seen.add(current);
+    candidates.push(current);
+
+    for (const key of envelopeKeys) {
+      const nested = current[key];
+      if (isPlainObject(nested)) {
+        queue.push(nested);
+      }
+    }
+  }
+
+  return candidates;
+}
+
+function extractTextCandidate(candidates: Record<string, unknown>[]) {
+  for (const key of textResultKeys) {
+    for (const candidate of candidates) {
+      const value = toCleanString(candidate[key]);
+      if (value) {
+        return value;
+      }
+    }
+  }
+
+  for (const candidate of candidates) {
+    for (const [key, value] of Object.entries(candidate)) {
+      if (ignoredScalarKeys.has(key)) {
+        continue;
+      }
+
+      const normalized = toCleanString(value);
+      if (normalized) {
+        return normalized;
+      }
+    }
+  }
+
+  return "";
+}
+
+function extractListCandidate(candidates: Record<string, unknown>[]) {
+  for (const key of listResultKeys) {
+    for (const candidate of candidates) {
+      const value = coerceListEntries(candidate[key]);
+      if (value.length > 0) {
+        return value;
+      }
+    }
+  }
+
+  for (const candidate of candidates) {
+    for (const value of Object.values(candidate)) {
+      const normalized = coerceListEntries(value);
+      if (normalized.length > 0) {
+        return normalized;
+      }
+    }
+  }
+
+  return [];
+}
+
+function coerceGroqCompletion(raw: unknown, plan: GenerationPlan) {
+  if (!isPlainObject(raw)) {
+    throw new Error("Groq response JSON was not an object.");
+  }
+
+  const candidates = collectCandidateObjects(raw);
+  const text = extractTextCandidate(candidates);
+  const items = extractListCandidate(candidates);
+
+  return {
+    text: plan.kind === "text" ? text || items.join(" ") : text,
+    items: plan.kind === "list" ? (items.length > 0 ? items : splitTextIntoItems(text)) : items,
+  };
+}
+
+function parseGroqContent(content: string, plan: GenerationPlan) {
+  const normalizedContent = clean(
+    content
+      .replace(/^```(?:json)?/i, "")
+      .replace(/```$/i, "")
+  );
+
+  let parsedContent: unknown;
+
+  try {
+    parsedContent = JSON.parse(normalizedContent);
+  } catch {
+    const objectMatch = normalizedContent.match(/\{[\s\S]*\}/);
+    if (!objectMatch) {
+      throw new Error("Groq response was not valid JSON.");
+    }
+
+    parsedContent = JSON.parse(objectMatch[0]);
+  }
+
+  const strictParse = groqCompletionSchema.safeParse(parsedContent);
+  if (strictParse.success) {
+    return strictParse.data;
+  }
+
+  return groqCompletionSchema.parse(coerceGroqCompletion(parsedContent, plan));
+}
+
+function supportsGroqJsonSchema(model: string) {
+  return model.startsWith("openai/gpt-oss-");
+}
+
+function getGroqResponseFormat(model: string) {
+  if (supportsGroqJsonSchema(model)) {
+    return {
+      type: "json_schema",
+      json_schema: {
+        name: "resume_inline_ai_output",
+        strict: true,
+        schema: groqCompletionJsonSchema,
+      },
+    } as const;
+  }
+
+  return {
+    type: "json_object",
+  } as const;
 }
 
 function formatTargetLabelForMessage(label: string) {
@@ -886,6 +1076,7 @@ async function callGroq(input: InlineAiRequest, plan: GenerationPlan): Promise<I
     throw new Error("GROQ_API_KEY is not configured.");
   }
 
+  const model = DEFAULT_GROQ_MODEL;
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -893,22 +1084,20 @@ async function callGroq(input: InlineAiRequest, plan: GenerationPlan): Promise<I
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: DEFAULT_GROQ_MODEL,
+      model,
       temperature: 0.4,
       messages: [
         {
           role: "system",
           content:
-            'You generate resume-ready inline field content. Use only facts grounded in the supplied resume context. Do not invent employers, degrees, dates, metrics, skills, tools, URLs, certifications, or outcomes. Return plain text only inside the requested JSON schema. You MUST respond with valid JSON only, in EXACTLY this format: {"text": "string", "items": ["string"]}. No other keys, no markdown, no explanation.',
+            'You generate resume-ready inline field content. Use only facts grounded in the supplied resume context. Do not invent employers, degrees, dates, metrics, skills, tools, URLs, certifications, or outcomes. Return valid JSON only. Put single-field text output in "text" and leave "items" empty. Put list output in "items" and leave "text" empty. Do not return markdown, labels, or explanation.',
         },
         {
           role: "user",
           content: buildPrompt(input, plan),
         },
       ],
-      response_format: {
-        type: "json_object",
-      },
+      response_format: getGroqResponseFormat(model),
     }),
   });
 
@@ -924,7 +1113,7 @@ async function callGroq(input: InlineAiRequest, plan: GenerationPlan): Promise<I
     throw new Error("Groq response did not include structured content.");
   }
 
-  const parsed = groqCompletionSchema.parse(JSON.parse(content));
+  const parsed = parseGroqContent(content, plan);
   return normalizeGroqOutput(parsed, plan, input.mode);
 }
 

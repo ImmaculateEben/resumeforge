@@ -373,7 +373,7 @@ function QSection({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ marginTop: gap }}>
+    <div data-print-section="true" style={{ marginTop: gap }}>
       <h2 style={{ fontSize: stfs * 0.85, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", color: accent.primary, margin: `0 0 ${gap * 0.4}px`, paddingBottom: dividers ? 5 : 0, borderBottom: dividers ? "1px solid #e5e7eb" : "none" }}>
         {title}
       </h2>

@@ -369,7 +369,7 @@ function RegistrySection({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ marginTop: gap }}>
+    <div data-print-section="true" style={{ marginTop: gap }}>
       <div style={{ background: "#d1d5db", padding: "1px 8px", marginBottom: gap * 0.45 }}>
         <h2 style={{ margin: 0, fontSize: stfs * 0.9, fontWeight: 700, textTransform: "uppercase" }}>{title}</h2>
       </div>

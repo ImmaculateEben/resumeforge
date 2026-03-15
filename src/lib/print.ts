@@ -1,8 +1,10 @@
 import type { PaperSize } from "@/components/templates/types";
 import { paperSizeMap } from "@/components/templates";
+import { nudgePageBreaks } from "@/lib/print-pagination";
 
 const PAGE_MARGIN_Y_MM = 25.4; // 1 inch
 const PAGE_MARGIN_X_MM = 25.4; // 1 inch
+const PAGE_MARGIN_Y_PX = 96; // 1 inch at 96dpi
 
 function buildPrintStyles(paperSize: PaperSize) {
   const paper = paperSizeMap[paperSize] || paperSizeMap.a4;
@@ -128,6 +130,7 @@ function printFromElement(sourceEl: HTMLElement, paperSize: PaperSize) {
 
   const root = frameDocument.createElement("div");
   root.className = "print-root";
+  root.setAttribute("data-nextjs-scroll-focus-boundary", "");
   root.appendChild(sourceEl.cloneNode(true));
   frameDocument.body.appendChild(root);
 
@@ -137,7 +140,19 @@ function printFromElement(sourceEl: HTMLElement, paperSize: PaperSize) {
 
   frameWindow.addEventListener("afterprint", cleanup, { once: true });
   window.setTimeout(cleanup, 3000);
-  window.setTimeout(() => {
+
+  const contentRoot = root.querySelector<HTMLElement>(".print-document-content");
+  const paper = paperSizeMap[paperSize] || paperSizeMap.a4;
+  const contentPageHeight = paper.heightPx - PAGE_MARGIN_Y_PX * 2;
+  const paginateBeforePrint = () => {
+    if (contentRoot) {
+      nudgePageBreaks(contentRoot, contentPageHeight);
+    }
+  };
+
+  window.setTimeout(async () => {
+    await frameDocument.fonts?.ready;
+    paginateBeforePrint();
     frameWindow.focus();
     frameWindow.print();
   }, 250);

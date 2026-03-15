@@ -372,7 +372,7 @@ function NSection({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ marginTop: gap * 1.1 }}>
+    <div data-print-section="true" style={{ marginTop: gap * 1.1 }}>
       <h2 style={{ fontSize: stfs, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", color: accent.text, margin: `0 0 ${gap * 0.5}px`, paddingBottom: 4, borderBottom: dividers ? `2px solid ${accent.primary}` : "none" }}>
         {title}
       </h2>

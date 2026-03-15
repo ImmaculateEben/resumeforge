@@ -11,17 +11,121 @@ import { inlineAiRequestSchema } from "@/modules/validation";
 
 export const runtime = "nodejs";
 
+function mapInlineAiError(error: unknown) {
+  const message = error instanceof Error ? error.message : "Unknown error";
+
+  if (
+    message.includes("UPSTASH_REDIS_REST_URL") ||
+    message.includes("UPSTASH_REDIS_REST_TOKEN") ||
+    message.includes("url property is missing") ||
+    message.includes("token property is missing")
+  ) {
+    return {
+      code: "INTERNAL_ERROR" as const,
+      message:
+        "AI assist rate limiting is not configured on the server. Add UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN, then redeploy.",
+      status: 503,
+    };
+  }
+
+  if (message.startsWith("Groq request failed:")) {
+    if (message.includes("401") || message.includes("403")) {
+      return {
+        code: "INTERNAL_ERROR" as const,
+        message:
+          "AI assist provider authentication failed. Check GROQ_API_KEY in your deployment environment, then redeploy.",
+        status: 503,
+      };
+    }
+
+    if (message.includes("404")) {
+      return {
+        code: "INTERNAL_ERROR" as const,
+        message:
+          "AI assist provider rejected the configured model. Check GROQ_MODEL in your deployment environment, then redeploy.",
+        status: 503,
+      };
+    }
+
+    if (message.includes("429")) {
+      return {
+        code: "RATE_LIMITED" as const,
+        message: "The AI provider is rate limiting requests right now. Please try again in a moment.",
+        status: 429,
+      };
+    }
+
+    if (
+      message.includes("500") ||
+      message.includes("502") ||
+      message.includes("503") ||
+      message.includes("504")
+    ) {
+      return {
+        code: "INTERNAL_ERROR" as const,
+        message: "The AI provider is temporarily unavailable. Please try again shortly.",
+        status: 503,
+      };
+    }
+
+    return {
+      code: "INTERNAL_ERROR" as const,
+      message:
+        "The AI provider rejected the request. Check GROQ_MODEL and provider settings, then try again.",
+      status: 502,
+    };
+  }
+
+  if (
+    message.includes("Groq response did not include structured content") ||
+    message.includes("Groq response was not valid JSON") ||
+    message.includes("AI returned an empty text draft") ||
+    message.includes("AI returned an empty list draft")
+  ) {
+    return {
+      code: "INTERNAL_ERROR" as const,
+      message: "The AI provider returned an invalid response. Please try again shortly.",
+      status: 502,
+    };
+  }
+
+  if (message.includes("fetch failed")) {
+    return {
+      code: "INTERNAL_ERROR" as const,
+      message: "The server could not reach the AI provider. Please try again shortly.",
+      status: 503,
+    };
+  }
+
+  return {
+    code: "INTERNAL_ERROR" as const,
+    message: "Unable to generate content right now. Please try again shortly.",
+    status: 500,
+  };
+}
+
 export async function POST(request: Request) {
   const startedAt = Date.now();
-  const session = await auth();
-  const userId = session?.user?.id;
+  let userId: string | undefined;
 
   try {
+    const session = await auth();
+    userId = session?.user?.id;
+
     if (!process.env.GROQ_API_KEY) {
       return errorResponse({
         code: "INTERNAL_ERROR",
         message:
           "AI assist is not configured on the server. Add GROQ_API_KEY, then restart locally or redeploy on Vercel.",
+        status: 503,
+      });
+    }
+
+    if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+      return errorResponse({
+        code: "INTERNAL_ERROR",
+        message:
+          "AI assist rate limiting is not configured on the server. Add UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN, then redeploy.",
         status: 503,
       });
     }
@@ -75,13 +179,11 @@ export async function POST(request: Request) {
       route: "/api/ai/inline-generate",
       userId,
       duration: Date.now() - startedAt,
+      aiModel: process.env.GROQ_MODEL || "openai/gpt-oss-20b",
+      errorName: error instanceof Error ? error.name : "UnknownError",
       error: error instanceof Error ? error.message : "Unknown error",
     });
 
-    return errorResponse({
-      code: "INTERNAL_ERROR",
-      message: "Unable to generate content right now. Please try again shortly.",
-      status: 500,
-    });
+    return errorResponse(mapInlineAiError(error));
   }
 }

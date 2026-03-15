@@ -1,41 +1,32 @@
 "use client";
 
-import { useMemo, useEffect, useLayoutEffect, useState, useCallback, useRef, type RefObject } from "react";
+import { useMemo, useEffect, useState, useCallback, type RefObject } from "react";
 import type { useResume } from "@/hooks/use-resume";
 import type { ResumeData } from "@/components/templates/types";
 import { paperSizeMap } from "@/components/templates/types";
-import { renderTemplate, accentColorMap, sampleResumeData } from "@/components/templates";
+import { renderTemplate, resolveAccentColors, sampleResumeData } from "@/components/templates";
 import { printResumeDocument } from "@/lib/print";
-import { nudgePageBreaks } from "@/lib/print-pagination";
 
 interface PreviewPanelProps {
   resume: ReturnType<typeof useResume>;
   previewRef: RefObject<HTMLDivElement | null>;
 }
 
-// Padding: 1 inch on all sides (25.4mm → 96px at 96dpi)
-const PAD_X_PX = 96; // 1 inch
-const PAD_Y_PX = 96; // 1 inch
-
 export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
   const [scale, setScale] = useState(1);
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
-  const [pageCount, setPageCount] = useState(1);
-  const contentMeasureRef = useRef<HTMLDivElement | null>(null);
+  const [previewContentRef, setPreviewContentRef] = useState<HTMLDivElement | null>(null);
+  const [previewHeightPx, setPreviewHeightPx] = useState(0);
 
   const paperSize = resume.styleConfig.paperSize || "a4";
   const paper = paperSizeMap[paperSize] || paperSizeMap.a4;
   const pageWidthPx = paper.widthPx;
   const pageHeightPx = paper.heightPx;
-  const contentWidthPx = pageWidthPx - PAD_X_PX * 2;
-  const contentHeightPerPage = pageHeightPx - PAD_Y_PX * 2;
-  const pageGapPx = 24;
 
   const measuredRef = useCallback((node: HTMLDivElement | null) => {
     setContainerRef(node);
   }, []);
 
-  // Scale to fit container width
   useEffect(() => {
     if (!containerRef) return;
 
@@ -56,23 +47,22 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
     return () => ro.disconnect();
   }, [containerRef, pageWidthPx]);
 
-  // After the hidden measuring div has laid out, nudge elements that straddle
-  // page boundaries so they push onto the next page. Then re-measure.
-  useLayoutEffect(() => {
-    const el = contentMeasureRef.current;
-    if (!el) return;
+  useEffect(() => {
+    if (!previewContentRef) return;
 
-    // Nudge elements away from page boundaries
-    nudgePageBreaks(el, contentHeightPerPage);
+    const updateHeight = () => {
+      setPreviewHeightPx(Math.max(pageHeightPx, previewContentRef.scrollHeight));
+    };
 
-    // Re-measure after nudging (the spacers may have increased total height)
-    const contentHeight = el.scrollHeight;
-    const pages = Math.max(1, Math.ceil(contentHeight / contentHeightPerPage));
-    setPageCount(pages);
-  }, [contentHeightPerPage, resume.data, resume.styleConfig, resume.templateKey, resume.documentType, resume.sectionOrder, resume.sectionTitles]);
+    updateHeight();
+
+    const ro = new ResizeObserver(updateHeight);
+    ro.observe(previewContentRef);
+    return () => ro.disconnect();
+  }, [previewContentRef, pageHeightPx]);
 
   const accentColors = useMemo(
-    () => accentColorMap[resume.styleConfig.accentTone] || accentColorMap.slate,
+    () => resolveAccentColors(resume.styleConfig.accentTone),
     [resume.styleConfig.accentTone]
   );
 
@@ -102,13 +92,12 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
       links: d.links.length > 0 ? d.links : s.links,
       hobbies: d.hobbies.length > 0 ? d.hobbies : s.hobbies,
       customSections: d.customSections.length > 0 ? d.customSections : s.customSections,
-      referees: d.referees && d.referees.length > 0 ? d.referees : (s.referees || []),
+      referees: d.referees && d.referees.length > 0 ? d.referees : s.referees || [],
     };
   }, [resume.data]);
 
   const needsScale = scale < 1;
-  const previewHeightPx = Math.max(pageHeightPx, pageCount * pageHeightPx);
-  const previewStackHeightPx = previewHeightPx + Math.max(0, pageCount - 1) * pageGapPx;
+  const scaledPreviewHeightPx = Math.max(pageHeightPx, previewHeightPx || pageHeightPx) * scale;
 
   const templateProps = useMemo(
     () => ({
@@ -140,7 +129,6 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
 
   return (
     <div ref={measuredRef} className="relative p-4 sm:p-6 lg:p-8 min-h-full flex flex-col items-center">
-      {/* Preview Header */}
       <div className="w-full flex items-center justify-between mb-3 sm:mb-4 print:hidden" style={{ maxWidth: `${paper.widthMm}mm` }}>
         <div className="flex items-center gap-2">
           <span className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -148,10 +136,6 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
           </span>
           <span className="text-xs text-gray-400 hidden sm:inline">&bull;</span>
           <span className="text-[10px] sm:text-xs text-gray-400 capitalize hidden sm:inline">{resume.templateKey}</span>
-          <span className="text-xs text-gray-400 hidden sm:inline">&bull;</span>
-          <span className="text-[10px] sm:text-xs text-gray-400 hidden sm:inline">
-            {pageCount} {pageCount === 1 ? "page" : "pages"}
-          </span>
         </div>
         <div className="flex items-center gap-2">
           {needsScale && (
@@ -169,87 +153,32 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
         </div>
       </div>
 
-      {/* Hidden measuring layer for pagination */}
-      <div
-        aria-hidden="true"
-        className="absolute left-0 top-0 h-0 w-full overflow-hidden pointer-events-none opacity-0"
-        style={{
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        <div
-          ref={contentMeasureRef}
-          className="print-document-content"
-          style={{
-            width: `${contentWidthPx}px`,
-            margin: "0 auto",
-          }}
-        >
-          {renderDocumentContent()}
-        </div>
-      </div>
-
-      {/* Screen preview as stacked pages */}
       <div
         aria-hidden="true"
         className="w-full flex justify-center print:hidden"
-        style={needsScale ? {
-          transformOrigin: "top center",
-          transform: `scale(${scale})`,
-          width: `${100 / scale}%`,
-          marginBottom: `-${(1 - scale) * previewStackHeightPx}px`,
-        } : undefined}
+        style={needsScale ? { height: `${scaledPreviewHeightPx}px` } : undefined}
       >
         <div
-          className="relative"
+          className="rounded-sm bg-white shadow-xl ring-1 ring-black/5"
           style={{
             width: `${pageWidthPx}px`,
-            height: `${previewStackHeightPx}px`,
+            minHeight: `${pageHeightPx}px`,
+            transform: needsScale ? `scale(${scale})` : undefined,
+            transformOrigin: "top center",
           }}
         >
-          {Array.from({ length: pageCount }, (_, i) => (
-            <div
-              key={i}
-              className="absolute left-0 rounded-sm bg-white shadow-xl ring-1 ring-black/5"
-              style={{
-                top: `${i * (pageHeightPx + pageGapPx)}px`,
-                width: `${pageWidthPx}px`,
-                height: `${pageHeightPx}px`,
-              }}
-            >
-              <div
-                className="absolute left-0 overflow-hidden"
-                style={{
-                  width: `${pageWidthPx}px`,
-                  height: `${contentHeightPerPage}px`,
-                  top: `${PAD_Y_PX}px`,
-                }}
-              >
-                <div
-                  className="absolute left-0 top-0"
-                  style={{
-                    width: `${pageWidthPx}px`,
-                    transform: `translateY(-${i * contentHeightPerPage}px)`,
-                  }}
-                >
-                  <div
-                    className="print-document-content"
-                    style={{
-                      width: `${contentWidthPx}px`,
-                      margin: "0 auto",
-                    }}
-                  >
-                    {renderDocumentContent()}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+          <div
+            ref={setPreviewContentRef}
+            className="print-document-content"
+            style={{
+              width: "100%",
+            }}
+          >
+            {renderDocumentContent()}
+          </div>
         </div>
       </div>
 
-      {/* Print-only document — kept off-screen so it always has rendered dimensions for printFromElement() */}
       <div
         aria-hidden="true"
         style={{ position: "fixed", left: "-9999px", top: 0, pointerEvents: "none", visibility: "hidden" }}
@@ -260,14 +189,13 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
           data-paper-size={paperSize}
           style={{
             width: `${pageWidthPx}px`,
-            minHeight: `${previewHeightPx}px`,
+            minHeight: `${pageHeightPx}px`,
           }}
         >
           <div
             className="print-document-content"
             style={{
-              width: `${contentWidthPx}px`,
-              margin: `${PAD_Y_PX}px auto`,
+              width: "100%",
             }}
           >
             {renderDocumentContent()}

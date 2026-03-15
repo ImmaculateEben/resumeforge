@@ -61,10 +61,13 @@ export function InlineAiAssist({
   const [mode, setMode] = useState<InlineAiMode>("generate");
   const [tone, setTone] = useState<InlineAiTone>("concise");
   const [jobDescription, setJobDescription] = useState("");
+  const [contextSummary, setContextSummary] = useState("");
   const [instruction, setInstruction] = useState("");
 
   const primaryActionLabel = result
-    ? "Regenerate"
+    ? instruction.trim() || contextSummary.trim()
+      ? "Revise draft"
+      : "Regenerate"
     : mode === "improve"
       ? labels.improve
       : mode === "tailor"
@@ -87,6 +90,7 @@ export function InlineAiAssist({
           mode,
           tone,
           jobDescription,
+          contextSummary,
           instruction,
           resume,
         }),
@@ -201,15 +205,34 @@ export function InlineAiAssist({
 
           <div>
             <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-gray-500">
-              Regenerate Instruction
+              Context Summary
+            </label>
+            <textarea
+              rows={3}
+              className="input-modern resize-none text-sm"
+              placeholder="Optional: summarize the exact achievements, tools, responsibilities, or experience AI should focus on..."
+              value={contextSummary}
+              onChange={(event) => setContextSummary(event.target.value)}
+            />
+            <p className="mt-1 text-[11px] text-gray-400">
+              Give AI a quick summary of what it should use for this draft.
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-wide text-gray-500">
+              Ask AI To Edit
             </label>
             <input
               type="text"
               className="input-modern text-sm"
-              placeholder="Optional: make this more results-focused"
+              placeholder="Optional: make this shorter, more confident, more technical, or more results-focused"
               value={instruction}
               onChange={(event) => setInstruction(event.target.value)}
             />
+            <p className="mt-1 text-[11px] text-gray-400">
+              Use this to revise the draft in a specific direction before you apply it.
+            </p>
           </div>
         </div>
       )}
@@ -237,6 +260,11 @@ export function InlineAiAssist({
             AI Draft
           </p>
           <p className="mt-1 text-xs text-gray-500">{result.message}</p>
+          {(instruction.trim() || contextSummary.trim()) && (
+            <p className="mt-1 text-[11px] text-gray-500">
+              Regenerate to revise this draft using your edit request or context summary.
+            </p>
+          )}
 
           {result.kind === "text" ? (
             <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{result.text}</p>

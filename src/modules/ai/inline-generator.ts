@@ -1017,12 +1017,16 @@ function buildPrompt(input: InlineAiRequest, plan: GenerationPlan) {
       instructions: [
         modeInstruction,
         toneInstructions[input.tone],
+        clean(input.contextSummary)
+          ? "Use the user-provided context summary as additional guidance when it matches the supplied resume context."
+          : undefined,
         ...plan.instructions,
         clean(input.instruction) ? `Additional user instruction: ${clean(input.instruction)}` : undefined,
       ].filter(Boolean),
       currentFieldValue: plan.currentValue,
       targetContext: plan.targetContext,
       broaderResumeContext: plan.sharedContext,
+      userContextSummary: clean(input.contextSummary),
       jobDescription: clean(input.jobDescription),
     },
     null,

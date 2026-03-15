@@ -28,7 +28,14 @@ export type {
   PaperSize,
   PaperDimensions,
 } from "./types";
-export { accentColorMap, sampleResumeData, paperSizeMap } from "./types";
+export {
+  accentColorMap,
+  sampleResumeData,
+  paperSizeMap,
+  isCustomAccentTone,
+  parseAccentToneColor,
+  resolveAccentColors,
+} from "./types";
 
 import type { TemplateProps } from "./types";
 import { AtlasTemplate } from "./Atlas";

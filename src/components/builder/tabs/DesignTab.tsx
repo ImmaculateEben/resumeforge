@@ -1,6 +1,7 @@
 "use client";
 
 import type { StyleConfig } from "@/components/templates/types";
+import { accentColorMap, isCustomAccentTone, parseAccentToneColor, resolveAccentColors } from "@/components/templates";
 import { templateOptions, accentOptions, paperSizeOptions } from "../constants";
 
 interface DesignTabProps {
@@ -11,6 +12,13 @@ interface DesignTabProps {
 }
 
 export function DesignTab({ templateKey, setTemplateKey, styleConfig, setStyleConfig }: DesignTabProps) {
+  const selectedAccentColors = resolveAccentColors(styleConfig.accentTone);
+  const customAccentSelected = isCustomAccentTone(styleConfig.accentTone);
+  const customAccentValue = customAccentSelected
+    ? selectedAccentColors.primary
+    : accentColorMap[styleConfig.accentTone]?.primary || accentColorMap.slate.primary;
+  const customAccentRgb = parseAccentToneColor(customAccentValue);
+
   return (
     <div className="space-y-6">
       {/* Template Selector */}
@@ -55,7 +63,7 @@ export function DesignTab({ templateKey, setTemplateKey, styleConfig, setStyleCo
           <h2 className="text-sm font-semibold text-gray-900">Accent Color</h2>
           <div className="flex-1 h-px bg-gray-100" />
         </div>
-        <div className="flex gap-2.5">
+        <div className="flex flex-wrap gap-2.5">
           {accentOptions.map((c) => (
             <button
               key={c.key}
@@ -68,6 +76,51 @@ export function DesignTab({ templateKey, setTemplateKey, styleConfig, setStyleCo
               title={c.label}
             />
           ))}
+        </div>
+        <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Custom RGB Color</p>
+              <p className="mt-1 text-sm text-gray-600">
+                Pick any accent color for headings, highlights, and section accents.
+              </p>
+            </div>
+            <div
+              className={`relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border-2 ${
+                customAccentSelected ? "border-primary ring-2 ring-primary/10" : "border-gray-200"
+              }`}
+              style={{ backgroundColor: customAccentValue }}
+            >
+              <input
+                type="color"
+                value={customAccentValue}
+                onChange={(e) => setStyleConfig({ ...styleConfig, accentTone: e.target.value })}
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                aria-label="Choose a custom accent color"
+              />
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setStyleConfig({ ...styleConfig, accentTone: customAccentValue })}
+              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                customAccentSelected
+                  ? "bg-primary-50 text-primary"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              Use custom color
+            </button>
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+              {customAccentValue.toUpperCase()}
+            </span>
+            {customAccentRgb && (
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+                RGB {customAccentRgb.r}, {customAccentRgb.g}, {customAccentRgb.b}
+              </span>
+            )}
+          </div>
         </div>
       </section>
 

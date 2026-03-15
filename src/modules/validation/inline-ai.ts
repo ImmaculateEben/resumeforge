@@ -148,6 +148,7 @@ export const inlineAiRequestSchema = z.object({
   mode: inlineAiModeSchema.default("generate"),
   tone: inlineAiToneSchema.default("concise"),
   jobDescription: plainText(5000).optional(),
+  contextSummary: plainText(1200).optional(),
   instruction: plainText(240).optional(),
   resume: resumeAiContextSchema,
 });

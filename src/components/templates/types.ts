@@ -200,6 +200,93 @@ export const accentColorMap: Record<string, AccentColors> = {
   rose: { primary: "#e11d48", light: "#ffe4e6", text: "#9f1239" },
 };
 
+interface RgbColor {
+  r: number;
+  g: number;
+  b: number;
+}
+
+function clampColorChannel(value: number) {
+  return Math.max(0, Math.min(255, Math.round(value)));
+}
+
+function parseHexColor(value: string): RgbColor | null {
+  const normalized = value.trim();
+  const match = normalized.match(/^#([\da-f]{3}|[\da-f]{6})$/i);
+  if (!match) {
+    return null;
+  }
+
+  const hex = match[1].length === 3
+    ? match[1].split("").map((char) => char + char).join("")
+    : match[1];
+
+  return {
+    r: parseInt(hex.slice(0, 2), 16),
+    g: parseInt(hex.slice(2, 4), 16),
+    b: parseInt(hex.slice(4, 6), 16),
+  };
+}
+
+function parseRgbColor(value: string): RgbColor | null {
+  const match = value
+    .trim()
+    .match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i);
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    r: clampColorChannel(Number(match[1])),
+    g: clampColorChannel(Number(match[2])),
+    b: clampColorChannel(Number(match[3])),
+  };
+}
+
+export function parseAccentToneColor(value?: string | null): RgbColor | null {
+  if (!value) {
+    return null;
+  }
+
+  return parseHexColor(value) || parseRgbColor(value);
+}
+
+function rgbToHex({ r, g, b }: RgbColor) {
+  return `#${[r, g, b]
+    .map((channel) => clampColorChannel(channel).toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+function mixColors(base: RgbColor, target: RgbColor, ratio: number): RgbColor {
+  return {
+    r: clampColorChannel(base.r + (target.r - base.r) * ratio),
+    g: clampColorChannel(base.g + (target.g - base.g) * ratio),
+    b: clampColorChannel(base.b + (target.b - base.b) * ratio),
+  };
+}
+
+export function isCustomAccentTone(value?: string | null) {
+  return Boolean(value) && !(value! in accentColorMap) && parseAccentToneColor(value) !== null;
+}
+
+export function resolveAccentColors(accentTone?: string): AccentColors {
+  if (accentTone && accentColorMap[accentTone]) {
+    return accentColorMap[accentTone];
+  }
+
+  const rgb = parseAccentToneColor(accentTone);
+  if (!rgb) {
+    return accentColorMap.slate;
+  }
+
+  return {
+    primary: rgbToHex(rgb),
+    light: rgbToHex(mixColors(rgb, { r: 255, g: 255, b: 255 }, 0.88)),
+    text: rgbToHex(mixColors(rgb, { r: 17, g: 24, b: 39 }, 0.5)),
+  };
+}
+
 export interface TemplateProps {
   data: ResumeData;
   styleConfig: StyleConfig;

@@ -1,17 +1,11 @@
 import type { PaperSize } from "@/components/templates/types";
 import { paperSizeMap } from "@/components/templates";
-import { nudgePageBreaks } from "@/lib/print-pagination";
-
-const PAGE_MARGIN_Y_MM = 25.4; // 1 inch
-const PAGE_MARGIN_X_MM = 25.4; // 1 inch
-const PAGE_MARGIN_Y_PX = 96; // 1 inch at 96dpi
 
 function buildPrintStyles(paperSize: PaperSize) {
   const paper = paperSizeMap[paperSize] || paperSizeMap.a4;
   return `
     @page {
       size: ${paper.cssSize};
-      margin: 0;
     }
 
     html, body {
@@ -36,9 +30,7 @@ function buildPrintStyles(paperSize: PaperSize) {
       width: 100% !important;
       min-height: auto !important;
       margin: 0 !important;
-      /* Padding gives visible margin at top of page 1 and bottom of last page only.
-         With @page margin: 0, there is zero gap at page breaks (like MS Word). */
-      padding: ${PAGE_MARGIN_Y_MM}mm ${PAGE_MARGIN_X_MM}mm !important;
+      padding: 0 !important;
       box-shadow: none !important;
       border-radius: 0 !important;
       position: static !important;
@@ -48,49 +40,6 @@ function buildPrintStyles(paperSize: PaperSize) {
     .print-root .print-document-content {
       width: auto !important;
       margin: 0 !important;
-    }
-
-    /* ── Page-break rules ── */
-    /* Keep section headings glued to their first block of content.
-       If fewer than ~3 lines fit before a heading, the heading + its
-       first child will move to the next page together. */
-    .print-document-content h2 {
-      break-after: avoid;
-      page-break-after: avoid;
-    }
-
-    /* Keep individual entry headings (job title, degree, project name)
-       attached to the content that immediately follows them */
-    .print-document-content h3 {
-      break-after: avoid;
-      page-break-after: avoid;
-    }
-
-    /* Within each section the content can break freely between items */
-    .print-document-content h2 + *,
-    .print-document-content h3 + * {
-      break-before: avoid;
-      page-break-before: avoid;
-    }
-
-    /* Prevent any paragraph (summary, description, last sentence) from
-       being split across a page break */
-    .print-document-content p {
-      break-inside: avoid;
-      page-break-inside: avoid;
-    }
-
-    /* Minimum 3 lines at the bottom/top of a page for list blocks */
-    .print-document-content ul,
-    .print-document-content ol {
-      orphans: 3;
-      widows: 3;
-    }
-
-    /* Individual list items should not break mid-item */
-    .print-document-content li {
-      break-inside: avoid;
-      page-break-inside: avoid;
     }
   `;
 }
@@ -141,18 +90,8 @@ function printFromElement(sourceEl: HTMLElement, paperSize: PaperSize) {
   frameWindow.addEventListener("afterprint", cleanup, { once: true });
   window.setTimeout(cleanup, 3000);
 
-  const contentRoot = root.querySelector<HTMLElement>(".print-document-content");
-  const paper = paperSizeMap[paperSize] || paperSizeMap.a4;
-  const contentPageHeight = paper.heightPx - PAGE_MARGIN_Y_PX * 2;
-  const paginateBeforePrint = () => {
-    if (contentRoot) {
-      nudgePageBreaks(contentRoot, contentPageHeight);
-    }
-  };
-
   window.setTimeout(async () => {
     await frameDocument.fonts?.ready;
-    paginateBeforePrint();
     frameWindow.focus();
     frameWindow.print();
   }, 250);
@@ -169,7 +108,7 @@ export function printResumeDocument(
 
   const styleEl = document.createElement("style");
   styleEl.id = "print-page-size";
-  styleEl.textContent = `@media print { @page { size: ${(paperSizeMap[paperSize] || paperSizeMap.a4).cssSize}; margin: 0; } }`;
+  styleEl.textContent = `@media print { @page { size: ${(paperSizeMap[paperSize] || paperSizeMap.a4).cssSize}; } }`;
 
   const existing = document.getElementById(styleEl.id);
   existing?.remove();

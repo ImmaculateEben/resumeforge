@@ -375,55 +375,12 @@ body {
   .print-area * {
     transform: none !important;
   }
-
-  /* Zero @page margins so there is NO gap at page breaks (like MS Word).
-     Visible padding is applied via .print-root .print-area padding in print.ts. */
-  @page {
-    size: A4;
-    margin: 0;
-  }
-
 }
 
 /* ─── Page-break rules (screen + print) ─────────────────────────────────────
    Applied outside @media print so they also govern the live preview.
    The browser uses these to avoid slicing content at page boundaries.
    ─────────────────────────────────────────────────────────────────────────── */
-
-/* Keep section headings (h2) attached to first content block.
-   Keep entry headings (h3: job title, degree, project name) with their content. */
-.print-document-content h2,
-.print-document-content h3 {
-  break-after: avoid;
-  page-break-after: avoid;
-}
-
-/* The sibling immediately after h2/h3 should not start a new page alone */
-.print-document-content h2+*,
-.print-document-content h3+* {
-  break-before: avoid;
-  page-break-before: avoid;
-}
-
-/* Prevent individual paragraphs (descriptions, summaries, last sentences)
-   from being torn across a page break */
-.print-document-content p {
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-
-/* Allow long lists to break naturally between items but keep each item intact */
-.print-document-content ul,
-.print-document-content ol {
-  break-inside: auto;
-  orphans: 3;
-  widows: 3;
-}
-
-.print-document-content li {
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
 
 /* Card styles */
 .card {

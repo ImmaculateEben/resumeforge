@@ -6,6 +6,7 @@ function buildPrintStyles(paperSize: PaperSize) {
   return `
     @page {
       size: ${paper.cssSize};
+      margin: 25.4mm;
     }
 
     html, body {
@@ -38,8 +39,10 @@ function buildPrintStyles(paperSize: PaperSize) {
     }
 
     .print-root .print-document-content {
-      width: auto !important;
+      width: 100% !important;
       margin: 0 !important;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
   `;
 }
@@ -108,7 +111,7 @@ export function printResumeDocument(
 
   const styleEl = document.createElement("style");
   styleEl.id = "print-page-size";
-  styleEl.textContent = `@media print { @page { size: ${(paperSizeMap[paperSize] || paperSizeMap.a4).cssSize}; } }`;
+  styleEl.textContent = `@media print { @page { size: ${(paperSizeMap[paperSize] || paperSizeMap.a4).cssSize}; margin: 25.4mm; } }`;
 
   const existing = document.getElementById(styleEl.id);
   existing?.remove();

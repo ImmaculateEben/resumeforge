@@ -12,6 +12,8 @@ interface PreviewPanelProps {
   previewRef: RefObject<HTMLDivElement | null>;
 }
 
+const PREVIEW_MARGIN_PX = 96;
+
 export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
   const [scale, setScale] = useState(1);
   const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
@@ -22,6 +24,7 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
   const paper = paperSizeMap[paperSize] || paperSizeMap.a4;
   const pageWidthPx = paper.widthPx;
   const pageHeightPx = paper.heightPx;
+  const pageContentWidthPx = pageWidthPx - PREVIEW_MARGIN_PX * 2;
 
   const measuredRef = useCallback((node: HTMLDivElement | null) => {
     setContainerRef(node);
@@ -159,7 +162,7 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
         style={needsScale ? { height: `${scaledPreviewHeightPx}px` } : undefined}
       >
         <div
-          className="rounded-sm bg-white shadow-xl ring-1 ring-black/5"
+          className="overflow-hidden rounded-sm bg-white shadow-xl ring-1 ring-black/5"
           style={{
             width: `${pageWidthPx}px`,
             minHeight: `${pageHeightPx}px`,
@@ -169,12 +172,26 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
         >
           <div
             ref={setPreviewContentRef}
-            className="print-document-content"
+            className="preview-document-shell"
             style={{
               width: "100%",
+              minHeight: `${pageHeightPx}px`,
+              padding: `${PREVIEW_MARGIN_PX}px`,
+              boxSizing: "border-box",
+              overflow: "hidden",
             }}
           >
-            {renderDocumentContent()}
+            <div
+              className="print-document-content"
+              style={{
+                width: `${pageContentWidthPx}px`,
+                maxWidth: "100%",
+                overflowWrap: "anywhere",
+                wordBreak: "break-word",
+              }}
+            >
+              {renderDocumentContent()}
+            </div>
           </div>
         </div>
       </div>
@@ -196,6 +213,8 @@ export function PreviewPanel({ resume, previewRef }: PreviewPanelProps) {
             className="print-document-content"
             style={{
               width: "100%",
+              overflowWrap: "anywhere",
+              wordBreak: "break-word",
             }}
           >
             {renderDocumentContent()}

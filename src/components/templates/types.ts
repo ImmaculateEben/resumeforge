@@ -26,7 +26,10 @@ export interface PersonalDetailRow {
   value: string;
 }
 
+export type PersonalDetailsLayout = "one-column" | "two-column";
+
 export interface PersonalDetails {
+  layout: PersonalDetailsLayout;
   dateOfBirth?: string;
   stateOfOrigin?: string;
   localGovernmentArea?: string;
@@ -308,6 +311,7 @@ export const sampleResumeData: ResumeData = {
   summary:
     "Results-driven frontend developer with 6+ years of experience building performant, accessible web applications. Passionate about clean code, design systems, and delivering exceptional user experiences at scale.",
   personalDetails: {
+    layout: "two-column",
     dateOfBirth: "May 12, 1995",
     stateOfOrigin: "Oyo State",
     localGovernmentArea: "Ibadan North",

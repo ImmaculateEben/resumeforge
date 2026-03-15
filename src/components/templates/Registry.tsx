@@ -1,5 +1,5 @@
 import type { TemplateProps, CustomSection } from "./types";
-import { getPersonalDetailEntries, getReferenceTitle, getTrimmedHobbies } from "./helpers";
+import { getPersonalDetailEntries, getPersonalDetailsColumnCount, getReferenceTitle, getTrimmedHobbies } from "./helpers";
 
 export function RegistryTemplate({
   data,
@@ -17,6 +17,7 @@ export function RegistryTemplate({
   const isCV = documentType === "cv";
   const titles = sectionTitles || {};
   const personalDetailEntries = getPersonalDetailEntries(data.personalDetails);
+  const personalDetailColumns = getPersonalDetailsColumnCount(data.personalDetails);
   const hobbies = getTrimmedHobbies(data.hobbies);
 
   const sections = sectionOrder || [
@@ -47,7 +48,7 @@ export function RegistryTemplate({
         if (!isCV || personalDetailEntries.length === 0) return null;
         return (
           <RegistrySection key="personalDetails" title={titles.personalDetails || "Personal Details"} stfs={stfs} gap={gap}>
-            <div style={{ display: "grid", gridTemplateColumns: personalDetailEntries.length > 5 ? "1fr 1fr" : "1fr", gap: "4px 28px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: personalDetailColumns === 2 ? "1fr 1fr" : "1fr", gap: "4px 28px" }}>
               {personalDetailEntries.map((entry) => (
                 <div key={entry.label} style={{ display: "grid", gridTemplateColumns: "138px 1fr", alignItems: "baseline", gap: 8 }}>
                   <span style={{ fontWeight: 700 }}>{entry.label}:</span>

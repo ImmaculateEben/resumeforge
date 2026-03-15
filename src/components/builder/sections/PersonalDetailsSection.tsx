@@ -1,6 +1,6 @@
 "use client";
 
-import type { PersonalDetails, PersonalDetailRow } from "@/components/templates/types";
+import type { PersonalDetails, PersonalDetailRow, PersonalDetailsLayout } from "@/components/templates/types";
 import { SectionCollapsible } from "../shared/SectionCollapsible";
 import { RemoveButton } from "../shared/RemoveButton";
 
@@ -14,7 +14,7 @@ interface PersonalDetailsSectionProps {
   onToggle: () => void;
 }
 
-const fixedFields: Array<{ key: keyof Omit<PersonalDetails, "extraDetails">; label: string; placeholder: string }> = [
+const fixedFields: Array<{ key: keyof Omit<PersonalDetails, "extraDetails" | "layout">; label: string; placeholder: string }> = [
   { key: "dateOfBirth", label: "Date of Birth", placeholder: "e.g. 18th December, 1998" },
   { key: "stateOfOrigin", label: "State of Origin", placeholder: "e.g. Oyo" },
   { key: "localGovernmentArea", label: "Local Government Area", placeholder: "e.g. Akinyele" },
@@ -22,6 +22,11 @@ const fixedFields: Array<{ key: keyof Omit<PersonalDetails, "extraDetails">; lab
   { key: "maritalStatus", label: "Marital Status", placeholder: "e.g. Single" },
   { key: "nationality", label: "Nationality", placeholder: "e.g. Nigerian" },
   { key: "religion", label: "Religion", placeholder: "e.g. Christian" },
+];
+
+const layoutOptions: Array<{ value: PersonalDetailsLayout; label: string; description: string }> = [
+  { value: "one-column", label: "1 Column", description: "Stacks details in a single vertical list." },
+  { value: "two-column", label: "2 Columns", description: "Splits details across two columns to save space." },
 ];
 
 export function PersonalDetailsSection({
@@ -49,6 +54,35 @@ export function PersonalDetailsSection({
       />
       {open && (
         <div className="space-y-4 animate-fade-in">
+          <div className="rounded-xl border border-gray-200 bg-white p-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-900">CV layout</p>
+                <p className="text-xs text-gray-500">Choose how personal details should appear in the preview and export.</p>
+              </div>
+              <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1">
+                {layoutOptions.map((option) => {
+                  const active = personalDetails.layout === option.value;
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      aria-pressed={active}
+                      title={option.description}
+                      onClick={() => updatePersonalDetails({ layout: option.value })}
+                      className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                        active ? "bg-white text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {fixedFields.map((field) => (
               <label key={field.key} className="space-y-1.5">

@@ -1,5 +1,5 @@
 import type { TemplateProps, CustomSection } from "./types";
-import { getPersonalDetailEntries, getReferenceTitle, getTrimmedHobbies } from "./helpers";
+import { getPersonalDetailEntries, getPersonalDetailsColumnCount, getReferenceTitle, getTrimmedHobbies } from "./helpers";
 
 export function QuillTemplate({
   data,
@@ -17,6 +17,7 @@ export function QuillTemplate({
   const isCV = documentType === "cv";
   const titles = sectionTitles || {};
   const personalDetailEntries = getPersonalDetailEntries(data.personalDetails);
+  const personalDetailColumns = getPersonalDetailsColumnCount(data.personalDetails);
   const hobbies = getTrimmedHobbies(data.hobbies);
 
   const sections = sectionOrder || [
@@ -47,7 +48,7 @@ export function QuillTemplate({
         if (!isCV || personalDetailEntries.length === 0) return null;
         return (
           <QSection key="personalDetails" title={titles.personalDetails || "Personal Details"} accent={accentColors} gap={gap} dividers={styleConfig.showSectionDividers} stfs={stfs}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 24px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: personalDetailColumns === 2 ? "1fr 1fr" : "1fr", gap: "8px 24px" }}>
               {personalDetailEntries.map((entry) => (
                 <div key={entry.label}>
                   <p style={{ color: "#111827", margin: 0, fontWeight: 500 }}>{entry.label}</p>

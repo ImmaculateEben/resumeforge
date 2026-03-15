@@ -1,5 +1,5 @@
 import type { TemplateProps, CustomSection } from "./types";
-import { getPersonalDetailEntries, getReferenceTitle, getTrimmedHobbies } from "./helpers";
+import { getPersonalDetailEntries, getPersonalDetailsColumnCount, getReferenceTitle, getTrimmedHobbies } from "./helpers";
 
 export function NorthstarTemplate({
   data,
@@ -17,6 +17,7 @@ export function NorthstarTemplate({
   const isCV = documentType === "cv";
   const titles = sectionTitles || {};
   const personalDetailEntries = getPersonalDetailEntries(data.personalDetails);
+  const personalDetailColumns = getPersonalDetailsColumnCount(data.personalDetails);
   const hobbies = getTrimmedHobbies(data.hobbies);
 
   const sections = sectionOrder || [
@@ -47,7 +48,7 @@ export function NorthstarTemplate({
         if (!isCV || personalDetailEntries.length === 0) return null;
         return (
           <NSection key="personalDetails" title={titles.personalDetails || "Personal Details"} accent={accentColors} gap={gap} dividers={styleConfig.showSectionDividers} stfs={stfs}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: personalDetailColumns === 2 ? "1fr 1fr" : "1fr", gap: 8 }}>
               {personalDetailEntries.map((entry) => (
                 <div key={entry.label} style={{ padding: "6px 10px", borderRadius: 8, background: accentColors.light, border: `1px solid ${accentColors.primary}12` }}>
                   <p style={{ margin: 0, color: "#111827", fontWeight: 700, fontSize: fs * 0.86 }}>{entry.label}</p>

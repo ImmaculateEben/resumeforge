@@ -1,5 +1,5 @@
 import type { TemplateProps, CustomSection } from "./types";
-import { getPersonalDetailEntries, getReferenceTitle, getTrimmedHobbies } from "./helpers";
+import { getPersonalDetailEntries, getPersonalDetailsColumnCount, getReferenceTitle, getTrimmedHobbies } from "./helpers";
 
 export function SummitTemplate({
   data,
@@ -17,6 +17,7 @@ export function SummitTemplate({
   const isCV = documentType === "cv";
   const titles = sectionTitles || {};
   const personalDetailEntries = getPersonalDetailEntries(data.personalDetails);
+  const personalDetailColumns = getPersonalDetailsColumnCount(data.personalDetails);
   const hobbies = getTrimmedHobbies(data.hobbies);
 
   const sidebarBg = accentColors.light;
@@ -48,7 +49,13 @@ export function SummitTemplate({
         if (!isCV || personalDetailEntries.length === 0) return null;
         return (
           <SBSection key="personalDetails" title={titles.personalDetails || "Personal Details"} accent={accentColors} gap={gap} stfs={stfs}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: personalDetailColumns === 2 ? "1fr 1fr" : "1fr",
+                gap: 6,
+              }}
+            >
               {personalDetailEntries.map((entry) => (
                 <div key={entry.label}>
                   <p style={{ color: sidebarText, margin: 0, fontWeight: 600, fontSize: fs * 0.88 }}>{entry.label}</p>

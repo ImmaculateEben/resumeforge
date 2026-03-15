@@ -42,6 +42,7 @@ const personalDetailRowSchema = z.object({
 });
 
 const personalDetailsSchema = z.object({
+  layout: z.enum(["one-column", "two-column"]).default("two-column"),
   dateOfBirth: plainText(60).optional(),
   stateOfOrigin: plainText(60).optional(),
   localGovernmentArea: plainText(60).optional(),
@@ -169,7 +170,7 @@ export const resumeDraftPayloadSchema = z.object({
   templateKey: z.string().min(1),
   basics: basicsSchema,
   summary: plainText(1000).default(""),
-  personalDetails: personalDetailsSchema.default({ extraDetails: [] }),
+  personalDetails: personalDetailsSchema.default({ layout: "two-column", extraDetails: [] }),
   experience: z.array(experienceItemSchema).default([]),
   education: z.array(educationItemSchema).default([]),
   projects: z.array(projectItemSchema).default([]),

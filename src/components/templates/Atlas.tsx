@@ -1,5 +1,5 @@
 import type { TemplateProps, CustomSection } from "./types";
-import { getPersonalDetailEntries, getReferenceTitle, getTrimmedHobbies } from "./helpers";
+import { getPersonalDetailEntries, getPersonalDetailsColumnCount, getReferenceTitle, getTrimmedHobbies } from "./helpers";
 
 export function AtlasTemplate({
   data,
@@ -17,6 +17,7 @@ export function AtlasTemplate({
   const isCV = documentType === "cv";
   const titles = sectionTitles || {};
   const personalDetailEntries = getPersonalDetailEntries(data.personalDetails);
+  const personalDetailColumns = getPersonalDetailsColumnCount(data.personalDetails);
   const hobbies = getTrimmedHobbies(data.hobbies);
 
   const sections = sectionOrder || [
@@ -61,7 +62,7 @@ export function AtlasTemplate({
             dividers={styleConfig.showSectionDividers}
             stfs={stfs}
           >
-            <div style={{ display: "grid", gridTemplateColumns: personalDetailEntries.length > 4 ? "1fr 1fr" : "1fr", gap: "6px 24px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: personalDetailColumns === 2 ? "1fr 1fr" : "1fr", gap: "6px 24px" }}>
               {personalDetailEntries.map((entry) => (
                 <div key={entry.label} style={{ display: "grid", gridTemplateColumns: "132px 1fr", gap: 8 }}>
                   <span style={{ fontWeight: 600, color: "#111827" }}>{entry.label}:</span>

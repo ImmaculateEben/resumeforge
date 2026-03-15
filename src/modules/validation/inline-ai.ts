@@ -90,6 +90,7 @@ export const resumeAiContextSchema = z.object({
   }),
   summary: basicString(1000),
   personalDetails: z.object({
+    layout: z.enum(["one-column", "two-column"]).default("two-column"),
     dateOfBirth: basicString(60).optional(),
     stateOfOrigin: basicString(60).optional(),
     localGovernmentArea: basicString(60).optional(),

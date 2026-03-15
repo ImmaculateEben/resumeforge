@@ -73,7 +73,7 @@ function genId() {
 }
 
 function createPersonalDetails(): PersonalDetails {
-  return { extraDetails: [] };
+  return { layout: "two-column", extraDetails: [] };
 }
 
 function createDefaultData(): ResumeData {
@@ -99,6 +99,7 @@ function cloneSectionOrder(sectionOrder: SectionOrder[]): SectionOrder[] {
 
 function normalizePersonalDetails(personalDetails?: Partial<PersonalDetails>): PersonalDetails {
   return {
+    layout: personalDetails?.layout === "one-column" ? "one-column" : "two-column",
     dateOfBirth: personalDetails?.dateOfBirth || "",
     stateOfOrigin: personalDetails?.stateOfOrigin || "",
     localGovernmentArea: personalDetails?.localGovernmentArea || "",

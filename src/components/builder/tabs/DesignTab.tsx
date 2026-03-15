@@ -1,7 +1,7 @@
 "use client";
 
 import type { StyleConfig } from "@/components/templates/types";
-import { accentColorMap, isCustomAccentTone, parseAccentToneColor, resolveAccentColors } from "@/components/templates";
+import { accentColorMap, isCustomAccentTone, resolveAccentColors } from "@/components/templates";
 import { templateOptions, accentOptions, paperSizeOptions } from "../constants";
 
 interface DesignTabProps {
@@ -17,7 +17,6 @@ export function DesignTab({ templateKey, setTemplateKey, styleConfig, setStyleCo
   const customAccentValue = customAccentSelected
     ? selectedAccentColors.primary
     : accentColorMap[styleConfig.accentTone]?.primary || accentColorMap.slate.primary;
-  const customAccentRgb = parseAccentToneColor(customAccentValue);
 
   return (
     <div className="space-y-6">
@@ -76,50 +75,34 @@ export function DesignTab({ templateKey, setTemplateKey, styleConfig, setStyleCo
               title={c.label}
             />
           ))}
-        </div>
-        <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-3">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Custom RGB Color</p>
-              <p className="mt-1 text-sm text-gray-600">
-                Pick any accent color for headings, highlights, and section accents.
-              </p>
-            </div>
-            <div
-              className={`relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border-2 ${
-                customAccentSelected ? "border-primary ring-2 ring-primary/10" : "border-gray-200"
-              }`}
-              style={{ backgroundColor: customAccentValue }}
-            >
-              <input
-                type="color"
-                value={customAccentValue}
-                onChange={(e) => setStyleConfig({ ...styleConfig, accentTone: e.target.value })}
-                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                aria-label="Choose a custom accent color"
-              />
-            </div>
-          </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setStyleConfig({ ...styleConfig, accentTone: customAccentValue })}
-              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                customAccentSelected
-                  ? "bg-primary-50 text-primary"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              Use custom color
-            </button>
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-              {customAccentValue.toUpperCase()}
+          <div
+            className={`relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border transition-all ${
+              customAccentSelected
+                ? "border-primary ring-2 ring-offset-2 ring-primary scale-110"
+                : "border-gray-300 hover:scale-110"
+            }`}
+            style={{
+              background: customAccentSelected
+                ? customAccentValue
+                : "conic-gradient(from 180deg, #ef4444, #f59e0b, #10b981, #3b82f6, #8b5cf6, #ef4444)",
+            }}
+            title="Custom color"
+          >
+            <input
+              type="color"
+              value={customAccentValue}
+              onChange={(e) => setStyleConfig({ ...styleConfig, accentTone: e.target.value })}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              aria-label="Choose a custom accent color"
+            />
+            <span className="pointer-events-none inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/90 shadow-sm">
+              <svg className="h-3 w-3 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 4.75a7.25 7.25 0 107.25 7.25c0 .82-.68 1.5-1.5 1.5h-1.12c-.77 0-1.38.7-1.22 1.45.25 1.21-.67 2.3-1.89 2.3H11A7.25 7.25 0 0011 4.75z" />
+                <circle cx="8.5" cy="10" r=".75" fill="currentColor" />
+                <circle cx="12.25" cy="8.25" r=".75" fill="currentColor" />
+                <circle cx="15.5" cy="10.5" r=".75" fill="currentColor" />
+              </svg>
             </span>
-            {customAccentRgb && (
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-                RGB {customAccentRgb.r}, {customAccentRgb.g}, {customAccentRgb.b}
-              </span>
-            )}
           </div>
         </div>
       </section>

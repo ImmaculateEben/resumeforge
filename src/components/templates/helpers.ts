@@ -5,7 +5,7 @@ export interface PersonalDetailEntry {
   value: string;
 }
 
-const fixedPersonalDetails: Array<{ key: keyof Omit<PersonalDetails, "extraDetails">; label: string }> = [
+const fixedPersonalDetails: Array<{ key: keyof Omit<PersonalDetails, "extraDetails" | "layout">; label: string }> = [
   { key: "dateOfBirth", label: "Date of Birth" },
   { key: "stateOfOrigin", label: "State of Origin" },
   { key: "localGovernmentArea", label: "Local Government Area" },
@@ -32,6 +32,10 @@ export function getPersonalDetailEntries(personalDetails: PersonalDetails): Pers
 
 export function hasPersonalDetails(personalDetails: PersonalDetails): boolean {
   return getPersonalDetailEntries(personalDetails).length > 0;
+}
+
+export function getPersonalDetailsColumnCount(personalDetails: PersonalDetails): 1 | 2 {
+  return personalDetails.layout === "one-column" ? 1 : 2;
 }
 
 export function getTrimmedHobbies(hobbies: string[]): string[] {

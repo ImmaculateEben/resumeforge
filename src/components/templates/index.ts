@@ -9,6 +9,7 @@ export type {
   ResumeData,
   PersonalDetails,
   PersonalDetailRow,
+  PersonalDetailsLayout,
   ExperienceItem,
   EducationItem,
   ProjectItem,
